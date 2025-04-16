@@ -1,0 +1,338 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+
+library(ggplot2)
+library(poLCA)
+library(MCMCpack)
+library(BayesLCA)
+library(matrixNormal)
+library(truncnorm)
+
+```
+
+
+
+```{r}
+set.seed(123)
+
+
+#data <- generate_BLCR_probit_binary(beta = truebeta, n = 1000)
+data <- poLCA.simdata(N = 1000, probs = NULL, nclass = 2, ndv = 4, nresp = NULL, x = NULL, niv = 1, b =matrix(c(1,2), nrow = 2,ncol = 1), P = NULL, missval = FALSE, pctmiss = NULL)
+
+#tc <- data[["membership"]]
+tc <- data[["trueclass"]]
+tc[tc==1] <- 0
+tc[tc==2] <- 1
+
+Y <- cbind(data[["dat"]][["Y1"]], data[["dat"]][["Y2"]],data[["dat"]][["Y3"]],data[["dat"]][["Y4"]])
+X <- cbind(data[["dat"]][["X1"]], data[["dat"]][["X2"]])
+#X <- data[["dat"]][["matrix.X_vec..nrow...n..ncol...p."]]
+
+data_probit_fit <- glm(tc ~ X1, data = data[["dat"]], family = binomial(link = "probit"))
+beta_glm <- data_probit_fit$coefficients
+
+p <- ncol(as.matrix(X)) #Getting the number of covariates as p
+G <- 2 #number of classes 
+
+#append 1 to X for \beta_0 coeff
+if (is.vector(X)){
+  ones <- rep(1,length(X))
+  X <- cbind(ones,X)
+} else{
+  ones <- rep(1,nrow(X))
+  X <- cbind(ones,X)
+}
+
+
+
+
+
+n <- nrow(as.matrix(Y)) #number of observations
+M <- ncol(as.matrix(Y)) #number of variables
+K <- apply(Y, 2, function(x) length(unique(x))) #Vector to indicate the number of categories in each variable
+
+
+#Initialising variables---------------------------------------------------------
+
+
+theta <- array(0, dim = c(G, M, max(K)))  #Initialising theta
+alpha <- rep(1, max(K))  #alpha parameters for theta_{gj} dirichlet distributions
+
+for (g in 1:G) { #generating a sample from theta_{gj vectors for each g and j}
+  for (j in 1:M) {
+    theta[g, j, 1:K[j]] <- rdirichlet(1, alpha[1:K[j]])  
+  }
+}
+
+
+#creating beta matrix
+beta <- array(rnorm((G-1)*(p+1),2,0.5),dim = c(G-1,p+1))
+
+w <- array(0, dim = c(n,G)) #Initialising w matrix
+
+z <- array(0, dim = c(n,G)) #initialising z matrix
+for(i in 1:n){
+  z[i,] <- rmultinom(1,1,c(0.5,0.5))
+}
+
+C <- array(0, dim = c(n,1))
+for (i in 1:n){
+  mu <-  beta %*% X[i,]
+  C[i] <- (all(z[i,] == c(1,0)))*rtruncnorm(1,a=0,b=Inf,mean = mu,sd=1) + (all(z[i,] == c(0,1)))*rtruncnorm(1,a=-Inf,b=0,mean = mu,sd=1)
+}
+
+beta <- mvrnorm(1,mu = (solve(t(X)%*%X))%*%(t(X)%*%C), Sigma = solve(t(X)%*%X))
+
+n_iter <- 100000
+burnin <- 10000
+thin <- 10
+beta_samples <- array(0,dim = c(G-1,p+1,n_iter))
+z_samples <- array(0, dim = c(n,G,n_iter))
+C_samples <- array(0,dim = c(n,1,n_iter))
+theta_samples <- array(0, dim = c(G,M,max(K),n_iter))
+
+count <- 1
+S <- array(0, dim = c(M,G,max(K)))
+
+#Precalculating these to use for calculating S in the loop
+Y_flat <- as.vector(t(Y))
+I <- rep(1:n, each = M * G)
+J <- rep(rep(1:M, each = G), n)
+G_0 <- rep(1:G, times = n * M)
+K_0 <- rep(Y_flat, each = G)
+
+#Precalculating the covariance for beta update
+beta_cov <- chol2inv(chol(crossprod(X)))
+
+
+
+#For calculating w
+log_sum1 <- numeric(n)
+log_sum2 <- numeric(n)
+
+start_time <- Sys.time()
+#Running the loop---------------------------------------------------------------
+while (count<n_iter){
+  z_binded_M <- do.call(cbind, replicate(M, z, simplify = FALSE))
+  z_flat <- as.vector(t(z_binded_M))
+  S_df <- data.frame(
+    i = I,         
+    j = J,      
+    g = G_0,         
+    k = K_0,       
+    z_value = z_flat 
+  )
+  S_df <- S_df[S_df$z_value == 1, ]
+  S <- with(S_df, table(g, j, k))
+  sapply(1:G, function(g) {
+    sapply(1:M, function(j) {
+      # Generate theta values for each g and j
+      theta[g, j, 1:K[j]] <<- rdirichlet(1, alpha[1:K[j]] + S[g, j, 1:K[j]])
+    })
+  })
+  theta_samples[,,,count] <- theta
+  mu_vec <- X%*%beta
+  Phi_vec <- pnorm(mu_vec,0,1)
+  not_Phi_vec <- 1 - Phi_vec
+  log_Phi_vec <- log(Phi_vec)
+  log_not_Phi_vec <- log(not_Phi_vec)
+  log_theta <- log(theta)
+  
+  
+  #This code works (?) but i could get it a bit more efficient without the loops maybe
+  log_sum1 <- numeric(n)
+  log_sum2 <- numeric(n)
+  for (i in 1:n) {
+    for (j in 1:M) {
+      y_ij <- Y[i,j]
+      log_sum1[i] <- log_sum1[i] + (y_ij<=K[j])*log_theta[1, j, y_ij]
+      log_sum2[i] <- log_sum2[i] + (y_ij<=K[j])*log_theta[2, j, y_ij]
+    }
+  }
+  log_w1 <- log_Phi_vec + log_sum1
+  log_w0 <- log_not_Phi_vec + log_sum2
+  w <- exp(cbind(log_w1,log_w0))
+  for (i in 1:n){
+    z[i,] <- rmultinom(1,1,w[i,])
+  }
+  z_samples[,,count] <- z
+  a <- ifelse(z[,1] == 1, 0, -Inf)
+  b <- ifelse(z[,1] == 1, Inf, 0)
+  C <- rtruncnorm(1,a = a,b = b, mean = mu_vec)
+  C_samples[,,count] <- C
+  beta <- mvrnorm(1,mu = beta_cov%*%(t(X)%*%C), Sigma = beta_cov)
+  beta_samples[,,count] <- beta
+  if(count %% 500 == 0){
+    cat("\rIteration:", count)
+    flush.console()
+  }
+  count <- count + 1
+}
+
+beta_samples_burned <- beta_samples[,,burnin:(n_iter-1), drop = FALSE]
+theta_samples_burned <- theta_samples[,,,burnin:(n_iter-1), drop = FALSE]
+C_samples_burned <- C_samples[,,burnin:(n_iter-1), drop = FALSE]
+z_samples_burned <- z_samples[,,burnin:(n_iter-1), drop = FALSE]
+
+beta_samples_thin <- beta_samples_burned[,,seq(1, dim(beta_samples_burned)[3], by = thin), drop = FALSE]
+theta_samples_thin <- theta_samples_burned[,,,seq(1, dim(theta_samples_burned)[4], by = thin), drop = FALSE]
+C_samples_thin <- C_samples_burned[,,seq(1, dim(C_samples_burned)[2], by = thin), drop = FALSE]
+z_samples_thin <- z_samples[,,seq(1, dim(z_samples_burned)[3], by = thin), drop = FALSE]
+
+beta_estimate <- apply(beta_samples_thin, c(1,2), mean)
+beta_sd <- apply(beta_samples_thin, c(1,2), sd)
+theta_estimate <- apply(theta_samples_thin, c(1,2,3), mean)
+theta_sd <- apply(theta_samples_thin, c(1,2), sd)
+end_time <- Sys.time()
+time_taken <- end_time-start_time
+
+```
+
+Comparing parameter estimates with true values
+```{r}
+probit_fit_to_simdata <- glm(tc ~ X1 , data = data[["dat"]], family = binomial(link = "probit"))
+
+#paste("True value of Beta: ", paste(truebeta, collapse = ", "))
+paste("Beta value fitted using glm: ", paste(probit_fit_to_simdata$coefficients, collapse = ", "))
+paste("beta estimate: ", paste(beta_estimate, collapse = ", "))
+
+
+truetheta <-  data[["probs"]]
+cat("\n\n\n\nTrue value of theta:\n", paste(lapply(truetheta, function(x) paste(capture.output(print(x)), collapse = "\n")), collapse = "\n\n"))
+
+#Going to change the layout of the theta so it looks like the true theta in order to compare
+theta_estimate1 <- list()
+for (j in 1:M){
+  theta_estimate1[[j]] <-matrix(0, ncol = K[j], nrow = G)
+  for (k in 1:K[j]){
+    for (g in 1:G){
+      theta_estimate1[[j]][g,k] <- theta_estimate[g,j,k]
+    }
+  }
+}
+
+cat("\n\n\n\n\n","theta estimate:\n", paste(lapply(theta_estimate1, function(x) paste(capture.output(print(x)), collapse = "\n")), collapse = "\n\n"))
+
+```
+
+
+Trace plots for $\beta$ 
+```{r}
+
+par(mfrow = c(2, 1), mar = c(4,4,3,2))
+for (i in 1:(G-1)) {
+  for (j in 1:(p+1)) {
+    values <- beta_samples_thin[i, j, ]
+    plot(values, type = 'l', main = bquote("Trace plot for " ~ beta[.(i)][.(j)]),
+         xlab = "Index", ylab = "Value")
+  }
+}
+
+```
+
+
+
+
+Density plots for $\beta$
+```{r}
+
+par(mfrow = c(2,1),mar = c(4,4,3,2))
+for (i in 1:(G-1)) {
+  for (j in 1:(p+1)) {
+    values <- beta_samples_thin[i,j,]
+    plot(density(values), main = bquote("Density plot for " ~ beta[.(i)][.(j)]),
+         xlab = "Index", ylab = "Value")
+    rug(jitter(values))
+  }
+}
+
+```
+
+
+
+testing classification accuracy of $\beta$ parameters - F1 test and confusion matrix
+```{r}
+
+#Classifying observations with estimated beta
+class_estimate_vec <- c()
+class_vec <- c()
+for (i in 1:n){
+  class_estimate <- pnorm(as.vector(X[i,])%*%as.vector(beta_estimate))
+  class_estimate_vec <- c(class_estimate_vec,class_estimate)
+  if (class_estimate>=0.5){
+    class_vec <- c(class_vec, 1)
+  } else {
+    class_vec <- c(class_vec, 0)
+  }
+}
+
+dat_1 <- data[["trueclass"]]
+TP <- sum((tc == 1) & (class_vec == 1))
+FP <- sum((tc == 0) & (class_vec == 1))
+FN <- sum((tc == 1) & (class_vec == 0))
+TN <- sum((tc == 0) & (class_vec == 0))
+
+precision <- TP / (TP + FP)
+recall <- TP / (TP + FN)
+
+f1_score <- 2 * ((precision * recall) / (precision + recall))
+confusion_mat <- matrix(c(TP,FN,FP,TN), nrow = 2, byrow = TRUE)
+
+paste("F1 score: ", paste(f1_score, collapse = ", "))
+cat("\n Confusion matrix: \n", confusion_mat[1,], "\n", confusion_mat[2,])
+
+```
+
+
+
+Plotting P(1) against X1
+```{r}
+
+#X2_mean <- mean(data[["dat"]][["X2"]])
+#X3_mean <- mean(data[["dat"]][["X3"]])
+x_vals <- seq(-3,3,0.001)
+plot(x_vals,pnorm(beta_estimate[1] + beta_estimate[2]*x_vals, 0,1),type = "l" )
+lines(x_vals,pnorm(probit_fit_to_simdata$coefficients[1]+probit_fit_to_simdata$coefficients[2]*x_vals,0,1), col = "blue")
+points(data[["dat"]][["X1"]], class_vec, col = "red", pch = 19)
+
+
+```
+
+
+Plotting P(1) against X2, holding X1, X3 constant
+```{r}
+
+#X1_mean <- mean(data[["dat"]][["X1"]])
+#X3_mean <- mean(data[["dat"]][["X3"]])
+#x_vals <- seq(-3,3,0.001)
+#plot(x_vals,pnorm(beta_estimate[1] + beta_estimate[2]*X1_mean + beta_estimate[3]*x_vals + beta_estimate[4]*X3_mean, 0,1),type = "l" )
+#lines(x_vals,pnorm(probit_fit_to_simdata$coefficients[1]+truebeta[2]*X1_mean +truebeta[3]*x_vals + truebeta[4]*X3_mean,0,1), col = "blue")
+#points(data[["dat"]][["X2"]], class_vec, col = "red", pch = 19)
+
+
+```
+
+
+
+Plotting P(1) against X3, holding X1, X2 constant
+```{r}
+
+#X1_mean <- mean(data[["dat"]][["X1"]])
+#X2_mean <- mean(data[["dat"]][["X2"]])
+#x_vals <- seq(-3,3,0.001)
+#plot(x_vals,pnorm(beta_estimate[1] + beta_estimate[2]*X1_mean + beta_estimate[3]*X2_mean + beta_estimate[4]*x_vals, 0,1),type = "l" )
+#lines(x_vals,pnorm(truebeta[1]+truebeta[2]*X1_mean +truebeta[3]*X2_mean + truebeta[4]*x_vals,0,1), col = "blue")
+#points(data[["dat"]][["X3"]], class_vec, col = "red", pch = 19)
+
+
+```
+
+
+
+
+

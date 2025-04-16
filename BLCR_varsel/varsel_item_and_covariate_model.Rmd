@@ -1,0 +1,201 @@
+---
+title: "Covariate Selection Within Latent Class Regression"
+output: html_notebook
+---
+```{r eval=FALSE, include=FALSE}
+
+library(BayesLogit)
+library(Matrix)
+library(MASS)
+library(LaplacesDemon)
+library(e1071)
+library(abind)
+library(label.switching)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(ggtext)
+library(gridExtra)
+source('./functions_for_BLCR_varsel_item_and_covariates.R')
+setwd('..')
+source('LCR_sim_data.R')
+
+```
+
+
+```{r eval=FALSE, include=FALSE}
+
+p <- 1
+G <- 3
+n <- 500
+
+#theta1 <- matrix(c(0.2,0.8,0.8,0.2, 0.3, 0.7), nrow = G, byrow = TRUE)
+#theta2 <- matrix(c(0.8,0.2,0.2,0.8, 0.3,0.7), nrow = G, byrow = TRUE)
+#theta3 <- matrix(c(0.3,0.1,0.6,0.6,0.3,0.1,0.1,0.8,0.1), nrow = G, byrow = TRUE)
+#theta4 <- matrix(c(0.1,0.2,0.3,0.4,0.5,0.3,0.1,0.1,0.1,0.7,0.1,0.1), nrow = G, byrow = TRUE)
+
+
+#theta1 <- matrix(c(0.8,0.2,0.2,0.8, 0.3,0.7), nrow = G, byrow = TRUE)
+
+
+#for the 3 groups - test--------------------------------------
+
+theta1 <- matrix(c(0.8,0.2,0.3,0.7,0.2,0.8), nrow = G, byrow = TRUE)
+theta3 <- matrix(c(0.7,0.3,0.4,0.6,0.2,0.8), nrow = G, byrow = TRUE)
+theta2 <- matrix(c(0.9,0.1,0.5,0.5,0.1,0.9), nrow = G, byrow = TRUE)
+theta4 <- matrix(c(0.6,0.4,0.3,0.7,0.8,0.2), nrow = G, byrow = TRUE)
+
+
+
+#For the 2 groups - test--------------------------------------
+
+#theta1 <- matrix(c(0.8,0.2,0.2,0.8), nrow = G, byrow = TRUE)
+#theta3 <- matrix(c(0.7,0.3,0.2,0.8), nrow = G, byrow = TRUE)
+#theta2 <- matrix(c(0.9,0.1,0.1,0.9), nrow = G, byrow = TRUE)
+#theta4 <- matrix(c(0.3,0.7,0.8,0.2), nrow = G, byrow = TRUE)
+
+
+
+
+
+
+#theta2 <- matrix(c(0.4,0.3,0.2,0.1,0.2,0.4,0.3,0.1), nrow = 2, byrow = TRUE)
+realtheta <- list(theta1,theta2,theta3,theta4)
+
+#theta1 <- matrix(c(0.8,0.2,0.3,0.7,0.2,0.8), nrow = G, byrow = TRUE)
+#theta3 <- matrix(c(0.7,0.3,0.4,0.6,0.2,0.8), nrow = G, byrow = TRUE)
+#theta2 <- matrix(c(0.9,0.1,0.5,0.5,0.1,0.9), nrow = G, byrow = TRUE)
+#theta4 <- matrix(c(0.6,0.4,0.3,0.7,0.8,0.2), nrow = G, byrow = TRUE)
+
+
+#realtheta <- list(theta1,theta2, theta3, theta4, theta5, theta6)
+#realtheta <- list(theta1, theta2)
+#realbeta <- matrix(c(0.5,1.2,-0.5,1,-0.8,1.5), nrow = p+1, ncol = G-1, byrow = FALSE)
+realbeta <- matrix(c(-1,1,1,-1), nrow = p+1, ncol = G-1, byrow = FALSE)
+data <- LCR_sim_data(theta = realtheta, beta = realbeta, n_samples = n)
+list2env(data, envir = .GlobalEnv)
+
+
+```
+
+
+
+```{r eval=FALSE, include=FALSE}
+
+list2env(data, envir = .GlobalEnv)
+
+#adding in the noise variable
+
+#X <- cbind(X,rnorm(n))
+
+
+
+
+init <- initialise_variables_polyagamma_varsel(G = G, X = X, Y = Y, beta_prior_mean = beta_prior_mean, beta_prior_cov = beta_prior_cov)
+list2env(init, envir = .GlobalEnv)
+
+var_factor <- 10
+beta_prior_mean <- rep(0,ncol(X))
+beta_prior_cov <- diag(var_factor^2,ncol(X))
+beta_prior_cov_inv <- solve(beta_prior_cov)
+
+n_iter <- 100000
+burnin <- 10000
+
+
+#hyperparameters here
+
+a <- 1
+b <- 1
+
+
+
+beta_samples <- array(0, dim = c(dim(beta),n_iter))
+gamma_samples <- matrix(0, nrow = p+1, ncol = n_iter)
+theta_samples <- array(0, dim = c(dim(theta), n_iter))
+tau_samples <- numeric(n_iter)
+omega_samples <- array(0, dim = c(dim(omega),n_iter))
+z_samples <- array(0, dim = c(dim(z),n_iter))
+w_samples <- array(0, dim = c(dim(w), n_iter))
+
+#I'll worry about label switching after.
+
+initial_time <- Sys.time()
+for(count in 1:n_iter){
+  #S <- S_update(Y_flat = Y_flat, I = I, J = J, G_0 = G_0, K_0 = K_0, M = M, z = z, G = G, K = K)
+  K_current <- K_update(Y_current = Y_current)
+  
+  M_current <- M_update(Y_current = Y_current)
+  
+  S <- S_update(Y_current = Y_current , z = z , G = G , K_current = K_current, M = M, psi = psi)
+
+  theta <- theta_update(S = S, alpha = alpha, K_current = K_current, G = G)
+
+  logit_probs <- logit_probs_update(eta = eta)
+
+  log_logit_probs <- log(logit_probs)
+
+  log_theta <- log(theta)
+
+  w <- w_update(log_logit_probs = log_logit_probs, log_theta = log_theta, Y_current = Y_current, G = G, n = n, M_current = M_current, K_current = K_current)
+
+  z <- z_update(w = w)
+  
+  mu <- mu_update(X = X, beta = beta)
+
+  eta <- eta_update(mu = mu, C = C)
+
+  kappa <- kappa_update(z = z)
+
+  exp_mu <- exp(mu) 
+  
+  C <- C_update(mu = mu, exp_mu = exp_mu, G = G, C = C)
+  
+  omega <- omega_update(eta = eta, mu = mu, G = G, n = n, omega = omega)
+
+  gamma_up <- gamma_update(gamma = gamma, p = p, beta_prior_cov_inv = beta_prior_cov_inv, beta_prior_mean = beta_prior_mean, kappa = kappa , G = G, X_current = X_current, omega = omega, tau =  tau)
+  
+  list2env(gamma_up, envir = .GlobalEnv)
+
+  tau <- tau_update(gamma = gamma, a = a, b = b) 
+  
+  beta <- beta_update(gamma = gamma, X_current = X_current, G = G, p = p, beta_prior_cov_inv = beta_prior_cov_inv, A = A)
+  
+  psi_up <- psi_update(M = M, psi = psi, Y = Y, S = S, alpha = alpha)
+  
+  list2env(psi_up, envir = .GlobalEnv)
+  
+  beta_samples[,,count] <- beta
+  
+  gamma_samples[,count] <- gamma
+  
+  theta_samples[,,,count] <- theta
+  
+  tau_samples[count] <- tau
+  
+  omega_samples[,,count] <- omega
+  
+  z_samples[,,count] <- z
+  
+  w_samples[,,count] <- w
+  
+  if (count %% 500 == 0) {
+    cat(sprintf("Iteration %d of %d completed.\r", count, n_iter))
+    flush.console() 
+  }
+}
+end_time <- Sys.time()
+time_taken <- end_time-initial_time
+
+#post processing
+
+beta_samples_burned <- beta_samples[,,burnin:n_iter]
+gamma_samples_burned <- gamma_samples[,burnin:n_iter]
+theta_samples_burned <- theta_samples[,,,burnin:n_iter]
+tau_samples_burned <- tau_samples[burnin:n_iter]
+omega_samples_burned <- omega_samples[,,burnin:n_iter]
+z_samples_burned <- z_samples[,,burnin:n_iter]
+w_samples_burned <- w_samples[,,burnin:n_iter]
+```
+
+

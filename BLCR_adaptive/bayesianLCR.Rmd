@@ -1,0 +1,306 @@
+---
+title: "Latent Class Regression Gibbs"
+output: html_notebook
+---
+
+```{r}
+
+library(poLCA)
+library(MCMCpack)
+library(BayesLCA)
+data("election")
+data <- election
+```
+
+
+
+Gonna try make a Gibbs Sampler to produce parameter esimates for latent class regression model
+Ill try test it with the election data set from poLCA
+```{r}
+
+Y <- cbind(data$MORALG, data$CARESG, data$KNOWG, data$LEADG, data$DISHONG, data$INTELG) #choosing the variables we wanna work with
+
+X <- data$PARTY
+num_X_columns <- ncol(X)  # Number of columns in the original X
+
+
+#For the moment Im gonna remove observations containing NA values from both X and Y
+
+combined <- cbind(X, Y)
+combined_cleaned <- na.omit(combined)
+if (is.vector(X)) {
+    # If X is a vector, extract the first column (X as a vector)
+    X <- combined_cleaned[, 1]
+    # Y would be the remaining columns (as a matrix or data frame)
+    Y <- combined_cleaned[, 2:ncol(combined_cleaned)]
+} else {
+    # If X is a matrix or data frame, determine the number of columns
+    num_X_columns <- ncol(X)
+    # Extract X columns
+    X <- combined_cleaned[, 1:num_X_columns]
+    # Y will be the remaining columns
+    Y <- combined_cleaned[, (num_X_columns + 1):ncol(combined_cleaned)]
+}
+
+
+
+
+
+
+p <- ncol(as.matrix(X)) #Getting the number of covariates as p
+G <- 2 #number of latent classes
+
+
+n <- nrow(as.matrix(Y)) #number of observations
+M <- ncol(as.matrix(Y)) #number of variables
+K <- numeric(M) #Vector giving the categories for each variable
+for (i in 1:M) {
+  K[i] <- length(unique(Y[, i]))
+}
+
+alpha <- rep(1, max(K))  #alpha parameters for theta_{gj} dirichlet distributions
+
+theta <- array(0, dim = c(G, M, max(K)))  #Initialising theta 
+
+
+for (g in 1:G) { #generating a sample from theta_{gj vectors for each g and j}
+  for (j in 1:M) {
+    theta[g, j, 1:K[j]] <- rdirichlet(1, alpha[1:K[j]])  
+  }
+}
+
+#creating beta matrix
+beta <- array(rnorm(G*p,0,0.5),dim = c(G,p))
+
+#Creating function for multinomial logistic regression
+gamma <- function(beta, g, x, i, G) {
+  xi <- as.matrix(x)[i,]                       
+  betaxi <- as.vector(beta %*% xi)             
+  numerator <- exp(betaxi[g])                  
+  denominator <- 1 + sum(exp(betaxi[-G]))      
+  return(numerator / denominator)    
+}
+
+
+gamma_vec <- function(beta,g,x,i,G){
+  z <- c()
+  for (v in 1:G-1){
+    z <- c(z,gamma(beta,v,X,i,G))
+  }
+  s <- z
+  z <- c(z,1-sum(s))
+  return(z[g])
+}
+
+
+
+
+
+
+
+w <- array(0,dim = c(n,G)) #Initialising w matrix
+
+
+
+
+for (i in 1:n) {
+  for (g in 1:G) {
+    p1 <- 1
+    for (j in 1:M){
+      for(k in 1:K[j]){
+        p1 <- p1*theta[g,j,k]^(Y[i,j] == k) # calculating double product. note dependence on theta and Y
+      }
+    }
+    w[i,g] <- gamma_vec(beta,g,X,i,G)*p1 #Updating entries of w. note dependence on beta
+  }
+}
+
+
+z <- array(0, dim = c(n,G)) #Initialising z matrix
+for (i in 1:n){
+  z[i,] <- rmultinom(1,1,w[i,])
+}
+
+
+#Now to update the parameter values
+#starting with theta
+#Creating the derived variables C and S
+C <-array(0, dim = c(n,M,G,max(K)))
+for (i in 1:n){
+  for (j in 1:M){
+    for (g in 1:G){
+      for (k in 1:K[j]){
+        C[i,j,g,k] <- (Y[i,j] == k)*(z[i,g])
+      }
+    }
+  }
+}
+
+S <- array(0, dim = c(M,G,max(K))) 
+for (j in 1:M){
+  for (g in 1:G){
+    for (k in 1:K[j])
+      S[j,g,k] = sum(C[,j,g,k])
+  }
+}
+
+
+
+
+#Now generating the updated theta sample
+
+for (g in 1:G) { #generating a sample from theta_{gj vectors for each g and j}
+  for (j in 1:M) {
+    theta[g, j, 1:K[j]] <- rdirichlet(1, alpha[1:K[j]] + S[j,g,1:K[j]])  
+  }
+}
+
+
+
+#Now the MH step for sampling beta parameters, unfinished
+#--------------------------------------------------------
+
+
+
+
+
+#now running in a loop, unfinished
+n_iter <- 10000
+count <- 0
+burn_in <- 100
+adapt_interval <- 10
+a <- 1
+
+
+beta_samples <- array(0,dim = c(G,p,n_iter))
+theta_samples <- array(0,dim = c(G, M, max(K),n_iter))
+z_samples <- array(0, dim = c(n,G,n_iter))
+
+
+accept_count <- rep(0,G)
+total_proposals <- rep(0,G)
+target_accept <- 0.23
+
+
+beta_proposals <- array(0, dim = c(G,p))
+
+
+
+
+sigma <- array(0,dim = c(G,p,p))
+for (g in 1:G){
+  sigma[g,,] <- diag(5,nrow = p)
+}
+
+r_accept <- numeric(G)
+
+
+
+while(count < n_iter){
+  for (i in 1:n){
+    for (j in 1:M){
+      for (g in 1:G){
+        for (k in 1:K[j]){
+          C[i,j,g,k] <- (Y[i,j] == k)*(z[i,g])
+        }
+      } 
+    }
+  }
+  for (j in 1:M){
+    for (g in 1:G){
+      for (k in 1:K[j]){
+        S[j,g,k] <- sum(C[,j,g,k])
+      }
+    }
+  }
+  
+  for (g in 1:G) { #generating a sample from theta_{gj} vectors for each g and j}
+    for (j in 1:M) {
+      theta[g, j, 1:K[j]] <- rdirichlet(1, alpha[1:K[j]] + S[j,g,1:K[j]])  
+    }
+  }
+  theta_samples[,,,count] <- theta
+  
+  
+  for (i in 1:n) { #Creating w_i vectors for each i and then generating z_i vectors from multinomial(w_i)
+    for (g in 1:G) {
+      p1 <- 1
+      for (j in 1:M){
+        for(k in 1:K[j]){
+          p1 <- p1*theta[g,j,k]^(Y[i,j] == k) # calculating double product. note dependence on theta and Y
+        }
+      }
+      w[i,g] <- gamma_vec(beta,g,X,i,G)*p1 #Updating entries of w. note dependence on beta
+    }
+    z[i,] <- rmultinom(1,1,w[i,])
+  }
+  
+  z_samples[,,count] <- z
+  
+  
+  
+  for (g in 1:G){
+    beta_proposals[g,] <- mvrnorm(1, mu=beta[g,], Sigma = sigma[g,,])
+    acceptance_prob_arg_numerator <- 1
+    acceptance_prob_arg_denominator <- 1
+    
+ 
+    log_acc_arg_vec <- numeric(n)
+    for(i in 1:n){
+      log_acc_arg_vec[i] <- z[i,g]*(log(gamma_vec(beta_proposals,g,X,i,G)) - log(gamma_vec(beta,g,X,i,G)))
+    }
+    log_acc_arg <- sum(log_acc_arg_vec)
+    acc_arg <- exp(log_acc_arg)
+    print( paste("group" , g,": acceptance ratio is " ,acc_arg))
+    
+    
+    #for (i in 1:n){
+      #acceptance_prob_arg_numerator <- acceptance_prob_arg_numerator*(gamma_vec(beta_proposals,g,X,i,G))^(z[i,g])
+      #acceptance_prob_arg_denominator <- acceptance_prob_arg_denominator*(gamma_vec(beta,g,X,i,G))^(z[i,g])
+    #}
+    #acceptance_prob <- min(1,acceptance_prob_arg_numerator/acceptance_prob_arg_denominator)
+    if(runif(1) < min(1,acc_arg)){
+      beta[g,] <- beta_proposals[g,]
+      accept_count[g] <- accept_count[g] + 1
+      print("Accepted")
+    } else{
+      print("rejected")
+    }
+    beta_samples[g,,count] <- beta[g, ]
+    
+    
+    if (count > burn_in && count %% adapt_interval == 0) {
+      r_accept[g] <- accept_count[g] / total_proposals[g]  # Calculate acceptance rate
+      print( paste("group" , g,": acceptance rate is " ,r_accept))
+      if (r_accept[g] < target_accept) {
+          sigma[g,,] <- sigma[g,,] * exp(a * (r_accept[g] - target_accept))  # Shrink the covariance matrix (reduce step size)
+          print("shrink")
+      } else {
+           sigma[g,,] <- sigma[g,,] * exp(-a * (r_accept[g] - target_accept))  # Expand the covariance matrix (increase step size)
+        print("expand")
+      }
+      
+      
+      # Reset counters for the next interval
+      accept_count[g] <- 0
+      total_proposals[g] <- 0
+    }
+    
+    
+    
+    total_proposals[g] <- total_proposals[g] + 1
+  }
+  
+  
+  
+  
+  
+  
+  
+  
+  count = count + 1
+  print(paste("Iteration ",count, " completed"))
+}
+
+
+```

@@ -1,0 +1,516 @@
+---
+title: "Covariate Selection Within Latent Class Regression"
+output: html_notebook
+---
+```{r eval=FALSE, include=FALSE}
+
+library(BayesLogit)
+library(Matrix)
+library(MASS)
+library(LaplacesDemon)
+library(e1071)
+library(abind)
+library(label.switching)
+source('./functions_for_BLCR_varsel.R')
+setwd('..')
+source('LCR_sim_data.R')
+
+```
+
+
+```{r eval=FALSE, include=FALSE}
+
+p <- 2
+G <- 3
+n <- 1000
+
+#theta1 <- matrix(c(0.2,0.8,0.8,0.2, 0.3, 0.7), nrow = G, byrow = TRUE)
+#theta2 <- matrix(c(0.8,0.2,0.2,0.8, 0.3,0.7), nrow = G, byrow = TRUE)
+#theta3 <- matrix(c(0.3,0.1,0.6,0.6,0.3,0.1,0.1,0.8,0.1), nrow = G, byrow = TRUE)
+#theta4 <- matrix(c(0.1,0.2,0.3,0.4,0.5,0.3,0.1,0.1,0.1,0.7,0.1,0.1), nrow = G, byrow = TRUE)
+
+
+#theta1 <- matrix(c(0.8,0.2,0.2,0.8, 0.3,0.7), nrow = G, byrow = TRUE)
+theta1 <- matrix(c(0.8,0.2,0.3,0.7,0.2,0.8), nrow = G, byrow = TRUE)
+theta3 <- matrix(c(0.7,0.3,0.4,0.6,0.2,0.8), nrow = G, byrow = TRUE)
+theta2 <- matrix(c(0.9,0.1,0.5,0.5,0.1,0.9), nrow = G, byrow = TRUE)
+theta4 <- matrix(c(0.6,0.4,0.3,0.7,0.8,0.2), nrow = G, byrow = TRUE)
+#theta2 <- matrix(c(0.4,0.3,0.2,0.1,0.2,0.4,0.3,0.1), nrow = 2, byrow = TRUE)
+realtheta <- list(theta1,theta2,theta3,theta4)
+
+#theta1 <- matrix(c(0.8,0.2,0.3,0.7,0.2,0.8), nrow = G, byrow = TRUE)
+#theta3 <- matrix(c(0.7,0.3,0.4,0.6,0.2,0.8), nrow = G, byrow = TRUE)
+#theta2 <- matrix(c(0.9,0.1,0.5,0.5,0.1,0.9), nrow = G, byrow = TRUE)
+#theta4 <- matrix(c(0.6,0.4,0.3,0.7,0.8,0.2), nrow = G, byrow = TRUE)
+
+
+#realtheta <- list(theta1,theta2, theta3, theta4, theta5, theta6)
+#realtheta <- list(theta1, theta2)
+#realbeta <- matrix(c(0.5,1.2,-0.5,1,-0.8,1.5), nrow = p+1, ncol = G-1, byrow = FALSE)
+realbeta <- matrix(c(0.5,1.2,0.5,1,-0.8,1.5), nrow = p+1, ncol = G-1, byrow = FALSE)
+data <- LCR_sim_data(theta = realtheta, beta = realbeta, n_samples = n, n_noise_var = 1)
+list2env(data, envir = .GlobalEnv)
+
+
+```
+
+```{r eval=FALSE, include=FALSE}
+list2env(data, envir = .GlobalEnv)
+
+#adding in a noise variable to the covariates
+X <- cbind(X,rnorm(n))
+
+a <- 1
+b <- 1
+
+init <- initialise_variables_polyagamma_varsel(G = 2, X = X, Y = Y)
+list2env(init, envir = .GlobalEnv)
+
+S <- S_update(Y_flat = Y_flat, I = I, J = J, G_0 = G_0, K_0 = K_0, M = M, z = z, G = G, K = K)
+
+theta <- theta_update(alpha = alpha, G = G, M = M, K = K, S = S, theta = theta)
+
+logit_probs <- logit_probs_update(eta = eta)
+
+log_logit_probs <- log(logit_probs)
+
+log_theta <- log(theta)
+
+w <- w_update(log_logit_probs = log_logit_probs, log_theta = log_theta, Y = Y, G = G, n = n, M = M, K = K)
+
+z <- z_update(w = w)
+
+eta <- eta_update(mu = mu, C = C)
+
+kappa <- kappa_update(z = z)
+
+
+gamma_up <- gamma_update(gamma = gamma, p = p, beta_prior_cov_inv = beta_prior_cov_inv, beta_prior_mean = beta_prior_mean, kappa = kappa, G = G, X_current = X_current, tau = tau)
+
+list2env(gamma_up, envir = .GlobalEnv)
+
+tau <- tau_update(gamma = gamma, a = a, b = b) 
+  
+beta <- beta_update(gamma = gamma, X_current = X_current, G = G, p = p)
+
+mu <- mu_update(X = X, beta = beta)
+
+exp_mu <- exp(mu) 
+
+C <- C_update(mu = mu, exp_mu = exp_mu, G = G, C = C)
+
+omega_up <- omega_update(eta = eta, mu = mu, G = G, n = n, omega = omega, Omega = Omega)
+
+list2env(omega_up, envir = .GlobalEnv)
+
+
+#psi <- psi_update(psi,M,alpha,S)
+
+
+
+
+
+```
+
+
+```{r eval=FALSE, include=FALSE}
+
+list2env(data, envir = .GlobalEnv)
+
+#adding in the noise variable
+
+#X <- cbind(X,rnorm(n))
+
+
+
+
+init <- initialise_variables_polyagamma_varsel(G = G, X = X, Y = Y, beta_prior_mean = beta_prior_mean, beta_prior_cov = beta_prior_cov)
+list2env(init, envir = .GlobalEnv)
+
+var_factor <- 10
+beta_prior_mean <- rep(0,ncol(X))
+beta_prior_cov <- diag(var_factor^2,ncol(X))
+
+n_iter <- 100000
+burnin <- 10000
+
+
+#hyperparameters here
+
+a <- 1
+b <- 1
+
+
+
+beta_samples <- array(0, dim = c(dim(beta),n_iter))
+gamma_samples <- matrix(0, nrow = p+1, ncol = n_iter)
+theta_samples <- array(0, dim = c(dim(theta), n_iter))
+tau_samples <- numeric(n_iter)
+omega_samples <- array(0, dim = c(dim(omega),n_iter))
+z_samples <- array(0, dim = c(dim(z),n_iter))
+w_samples <- array(0, dim = c(dim(w), n_iter))
+
+#I'll worry about label switching after.
+
+initial_time <- Sys.time()
+for(count in 1:n_iter){
+  #S <- S_update(Y_flat = Y_flat, I = I, J = J, G_0 = G_0, K_0 = K_0, M = M, z = z, G = G, K = K)
+  
+  S <- S_update(Y = Y,z = z,M = M,G = G,K = K)
+
+  theta <- theta_update(S = S,alpha = alpha,K = K,G = G,M = M)
+
+  logit_probs <- logit_probs_update(eta = eta)
+
+  log_logit_probs <- log(logit_probs)
+
+  log_theta <- log(theta)
+
+  w <- w_update(log_logit_probs = log_logit_probs, log_theta = log_theta, Y = Y, G = G, n = n, M = M, K = K)
+
+  z <- z_update(w = w)
+  
+  mu <- mu_update(X = X, beta = beta)
+
+  eta <- eta_update(mu = mu, C = C)
+
+  kappa <- kappa_update(z = z)
+
+  exp_mu <- exp(mu) 
+  
+  C <- C_update(mu = mu, exp_mu = exp_mu, G = G, C = C)
+  
+  omega <- omega_update(eta = eta, mu = mu, G = G, n = n, omega = omega)
+
+  gamma_up <- gamma_update(gamma = gamma, p = p, beta_prior_cov_inv = beta_prior_cov_inv, beta_prior_mean = beta_prior_mean, kappa = kappa , G = G, X_current = X_current, omega = omega, tau =  tau)
+  
+  list2env(gamma_up, envir = .GlobalEnv)
+
+  tau <- tau_update(gamma = gamma, a = a, b = b) 
+  
+  beta <- beta_update(gamma = gamma, X_current = X_current, G = G, p = p, beta_prior_cov_inv = beta_prior_cov_inv, A = A)
+  
+  beta_samples[,,count] <- beta
+  
+  gamma_samples[,count] <- gamma
+  
+  theta_samples[,,,count] <- theta
+  
+  tau_samples[count] <- tau
+  
+  omega_samples[,,count] <- omega
+  
+  z_samples[,,count] <- z
+  
+  w_samples[,,count] <- w
+  
+  if (count %% 500 == 0) {
+    cat(sprintf("Iteration %d of %d completed.\r", count, n_iter))
+    flush.console() 
+  }
+}
+end_time <- Sys.time()
+time_taken <- end_time-initial_time
+
+#post processing
+
+beta_samples_burned <- beta_samples[,,burnin:n_iter]
+gamma_samples_burned <- gamma_samples[,burnin:n_iter]
+theta_samples_burned <- theta_samples[,,,burnin:n_iter]
+tau_samples_burned <- tau_samples[burnin:n_iter]
+omega_samples_burned <- omega_samples[,,burnin:n_iter]
+z_samples_burned <- z_samples[,,burnin:n_iter]
+w_samples_burned <- w_samples[,,burnin:n_iter]
+```
+
+
+```{r eval=FALSE, include=FALSE}
+#relabelling attempt
+  
+z_mat <- matrix(0, nrow = dim(z_samples_burned)[3], ncol = n)
+for (iter in 1:dim(z_samples_burned)[3]){
+  temp <- z_samples_burned[,,iter]
+  temp_row <- apply(temp,1,which.max)
+  z_mat[iter,] <- temp_row 
+}
+w_samples_reshape <- aperm(w_samples_burned,c(3,1,2))
+ls <- label.switching(method = c("STEPHENS", "ECR", "ECR-ITERATIVE-1", "ECR-ITERATIVE-2"), z = z_mat, K = G, p = w_samples_reshape, zpivot = class)
+
+ls_perm_stephens <- ls$permutations$STEPHENS
+ls_perm_ECR <- ls$permutations$ECR
+ls_perm_iterative1 <- ls$permutations$`ECR-ITERATIVE-1`
+ls_perm_iterative2 <- ls$permutations$`ECR-ITERATIVE-2`
+
+#applying permutations to the parameter samples
+reordered_beta_samples_stephens <- array(0, dim = dim(beta_samples_burned))
+reordered_beta_samples_ECR <- array(0, dim = dim(beta_samples_burned))
+reordered_beta_samples_ECR_i1 <- array(0, dim = dim(beta_samples_burned))
+reordered_beta_samples_ECR_i2 <- array(0, dim = dim(beta_samples_burned))
+for (i in seq_len(dim(beta_samples_burned)[3])) {
+  reordered_beta_samples_stephens[,,i] <- beta_samples_burned[, ls_perm_stephens[i, ], i]
+  reordered_beta_samples_ECR[,,i] <- beta_samples_burned[, ls_perm_ECR[i, ], i]
+  reordered_beta_samples_ECR_i1[,,i] <- beta_samples_burned[, ls_perm_iterative1[i, ], i]
+  reordered_beta_samples_ECR_i2[,,i] <- beta_samples_burned[, ls_perm_iterative2[i, ], i]
+}
+
+reordered_theta_samples_stephens <- array(0, dim = dim(theta_samples_burned))
+reordered_theta_samples_ECR <- array(0, dim = dim(theta_samples_burned))
+reordered_theta_samples_ECR_i1 <- array(0, dim = dim(theta_samples_burned))
+reordered_theta_samples_ECR_i2 <- array(0, dim = dim(theta_samples_burned))
+for (i in seq_len(dim(theta_samples_burned)[4])) {
+  reordered_theta_samples_stephens[,,,i] <- theta_samples_burned[ls_perm_stephens[i,], , ,i]
+  reordered_theta_samples_ECR[,,,i] <- theta_samples_burned[ls_perm_ECR[i,], , ,i]
+  reordered_theta_samples_ECR_i1[,,,i] <- theta_samples_burned[ls_perm_iterative1[i,], , ,i]
+  reordered_theta_samples_ECR_i2[,,,i] <- theta_samples_burned[ls_perm_iterative2[i,], , ,i]
+}
+
+reordered_z_samples_stephens <- array(0, dim = dim(z_samples_burned))
+reordered_z_samples_ECR <- array(0, dim = dim(z_samples_burned))
+reordered_z_samples_ECR_i1 <- array(0, dim = dim(z_samples_burned))
+reordered_z_samples_ECR_i2 <- array(0, dim = dim(z_samples_burned))
+for (i in seq_len(dim(z_samples_burned)[3])) {
+  reordered_z_samples_stephens[,,i] <- z_samples_burned[,ls_perm_stephens[i,],i]
+  reordered_z_samples_ECR[,,i] <- z_samples_burned[,ls_perm_ECR[i,],i]
+  reordered_z_samples_ECR_i1[,,i] <- z_samples_burned[,ls_perm_iterative1[i,],i]
+  reordered_z_samples_ECR_i2[,,i] <- z_samples_burned[,ls_perm_iterative1[i,],i]
+}
+
+reordered_w_samples_stephens <- array(0, dim = dim(w_samples_burned))
+reordered_w_samples_ECR <- array(0, dim = dim(w_samples_burned))
+reordered_w_samples_ECR_i1 <- array(0, dim = dim(w_samples_burned))
+reordered_w_samples_ECR_i2 <- array(0, dim = dim(w_samples_burned))
+for (i in seq_len(dim(w_samples_burned)[3])) {
+  reordered_w_samples_stephens[,,i] <- w_samples_burned[,ls_perm_stephens[i,],i]
+  reordered_w_samples_ECR[,,i] <- w_samples_burned[,ls_perm_ECR[i,],i]
+  reordered_w_samples_ECR_i1[,,i] <- w_samples_burned[,ls_perm_iterative1[i,],i]
+  reordered_w_samples_ECR_i2[,,i] <- w_samples_burned[,ls_perm_iterative2[i,],i]
+}
+
+reordered_omega_samples_stephens <- array(0, dim = dim(omega_samples_burned))
+reordered_omega_samples_ECR <- array(0, dim = dim(omega_samples_burned))
+reordered_omega_samples_ECR_i1 <- array(0, dim = dim(omega_samples_burned))
+reordered_omega_samples_ECR_i2 <- array(0, dim = dim(omega_samples_burned))
+for (i in seq_len(dim(omega_samples_burned)[3])) {
+  reordered_omega_samples_stephens[,,i] <- omega_samples_burned[,ls_perm_stephens[i,],i]
+  reordered_omega_samples_ECR[,,i] <- omega_samples_burned[,ls_perm_ECR[i,],i]
+  reordered_omega_samples_ECR_i1[,,i] <- omega_samples_burned[,ls_perm_iterative1[i,],i]
+  reordered_omega_samples_ECR_i2[,,i] <- omega_samples_burned[,ls_perm_iterative2[i,],i]
+}
+
+#need to adjust for wherever the baseline has swapped for beta by subtracting
+
+relevelled_beta_samples_stephens <- reordered_beta_samples_stephens
+relevelled_beta_samples_ECR <- reordered_beta_samples_ECR
+relevelled_beta_samples_ECR_i1 <- reordered_beta_samples_ECR_i1
+relevelled_beta_samples_ECR_i2 <- reordered_beta_samples_ECR_i2
+for (count in 1:(dim(reordered_beta_samples_stephens)[3])){
+  baseline_stephens <- reordered_beta_samples_stephens[,G,count]
+  relevelled_beta_samples_stephens[,,count] <- reordered_beta_samples_stephens[,,count] - baseline_stephens
+  baseline_ECR <- reordered_beta_samples_ECR[,G,count]
+  relevelled_beta_samples_ECR[,,count] <- reordered_beta_samples_ECR[,,count] - baseline_ECR
+  baseline_ECR_i1 <- reordered_beta_samples_ECR_i1[,G,count]
+  relevelled_beta_samples_ECR_i1[,,count] <- reordered_beta_samples_ECR_i1[,,count] - baseline_ECR_i1
+  baseline_ECR_i2 <- reordered_beta_samples_ECR_i2[,G,count]
+  relevelled_beta_samples_ECR_i2[,,count] <- reordered_beta_samples_ECR_i2[,,count] - baseline_ECR_i2
+}
+
+
+```
+
+
+## Outputs 
+The variance for the beta prior is a diagonal of $10^2$
+
+
+```{r echo=FALSE}
+
+beta_estimate_stephens <- apply(relevelled_beta_samples_stephens,c(1,2), mean)
+beta_estimate_ECR <- apply(relevelled_beta_samples_ECR,c(1,2), mean)
+beta_estimate_ECR_i1 <- apply(relevelled_beta_samples_ECR_i1,c(1,2), mean)
+beta_estimate_ECR_i2 <- apply(relevelled_beta_samples_ECR_i2,c(1,2), mean)
+theta_estimate_stephens <- apply(reordered_theta_samples_stephens,c(1,2,3), mean)
+theta_estimate_ECR <- apply(reordered_theta_samples_ECR,c(1,2,3), mean)
+theta_estimate_ECR_i1 <- apply(reordered_theta_samples_ECR_i1,c(1,2,3), mean)
+theta_estimate_ECR_i2 <- apply(reordered_theta_samples_ECR_i2,c(1,2,3), mean)
+gamma_proportions_estimate <- apply(gamma_samples_burned,1, mean)
+
+beta_sd_stephens <- apply(relevelled_beta_samples_stephens,c(1,2), sd)
+beta_sd_ECR <- apply(relevelled_beta_samples_ECR,c(1,2), sd)
+beta_sd_ECR_i1 <- apply(relevelled_beta_samples_ECR_i1,c(1,2), sd)
+beta_sd_ECR_i2 <- apply(relevelled_beta_samples_ECR_i2,c(1,2), sd)
+
+theta_sd_stephens <- apply(reordered_theta_samples_stephens,c(1,2,3), sd)
+theta_sd_ECR <- apply(reordered_theta_samples_ECR,c(1,2,3), sd)
+theta_sd_ECR_i1 <- apply(reordered_theta_samples_ECR_i1,c(1,2,3), sd)
+theta_sd_ECR_i2 <- apply(reordered_theta_samples_ECR_i2,c(1,2,3), sd)
+
+theta_estimate_stephens1 <- list()
+theta_estimate_ECR1 <- list()
+theta_estimate_ECR_i11 <- list()
+theta_estimate_ECR_i21 <- list()
+for (j in 1:M){
+  theta_estimate_stephens1[[j]] <- matrix(0, ncol = K[j], nrow = G)
+  theta_estimate_ECR1[[j]] <- matrix(0, ncol = K[j], nrow = G)
+  theta_estimate_ECR_i11[[j]] <- matrix(0, ncol = K[j], nrow = G)
+  theta_estimate_ECR_i21[[j]] <- matrix(0, ncol = K[j], nrow = G)
+  for (k in 1:K[j]){
+    for (g in 1:G){
+      theta_estimate_stephens1[[j]][g,k] <- theta_estimate_stephens[g,j,k]
+      theta_estimate_ECR1[[j]][g,k] <- theta_estimate_ECR[g,j,k]
+      theta_estimate_ECR_i11[[j]][g,k] <- theta_estimate_ECR_i1[g,j,k]
+      theta_estimate_ECR_i21[[j]][g,k] <- theta_estimate_ECR_i2[g,j,k]
+    }
+  }
+}
+
+
+cat("Estimate for beta (reordered using stephens method):\n")
+print(beta_estimate_stephens)
+#cat("Estimate for beta (reordered using ECR method):\n")
+#print(beta_estimate_ECR)
+#cat("Estimate for beta (reordered using iterative ECR method 1):\n")
+#print(beta_estimate_ECR_i1)
+#cat("Estimate for beta (reordered using iterative ECR method 2):\n")
+#print(beta_estimate_ECR_i2)
+
+cat("Estimate for theta (reordered using stephens method):\n", paste(lapply(theta_estimate_stephens1, function(x) paste(capture.output(print(x)), collapse = "\n")), collapse = "\n\n"))
+
+#cat("Estimate for theta (reordered using ECR method):\n", paste(lapply(theta_estimate_ECR1, function(x) paste(capture.output(print(x)), collapse = "\n")), collapse = "\n\n"))
+
+#cat("Estimate for theta (reordered using iterative ECR method 1):\n", paste(lapply(theta_estimate_ECR_i11, function(x) paste(capture.output(print(x)), collapse = "\n")), collapse = "\n\n"))
+
+#cat("Estimate for theta (reordered using iterative ECR method 2):\n", paste(lapply(theta_estimate_ECR_i21, function(x) paste(capture.output(print(x)), collapse = "\n")), collapse = "\n\n"))
+
+
+cat("\n Proportion of times each gamma was included:\n")
+print(gamma_proportions_estimate)
+```
+
+So the noise variable is being included in $\sim 0.1$ of the iterations. 
+
+
+```{r echo=FALSE}
+
+cat("True value of beta:\n")
+print(realbeta)
+
+cat("True value of theta:\n", paste(lapply(realtheta, function(x) paste(capture.output(print(x)), collapse = "\n")), collapse = "\n\n"))
+
+```
+Our estimated beta is in terms of the groups 1,3,2, while our true beta is in terms of 1,2,3. For clarity, I'll relevel all of the beta samples to account for this.
+
+```{r echo=FALSE}
+
+relevelled_beta_samples_stephens_new_baseline <- relevelled_beta_samples_stephens
+
+for (count in 1:(dim(relevelled_beta_samples_stephens)[3])){
+  baseline <- relevelled_beta_samples_stephens[,2,count]
+  relevelled_beta_samples_stephens_new_baseline[,,count] <- relevelled_beta_samples_stephens[,,count] - baseline
+}
+
+new_baseline_beta_estimate <- apply(relevelled_beta_samples_stephens_new_baseline, c(1,2), mean)
+
+cat("Relevelled Value of beta: \n")
+print(new_baseline_beta_estimate)
+
+```
+
+
+
+## Trace plots for the beta - before relevelling 
+
+```{r echo=FALSE}
+
+plot(beta_samples_burned[1,1,], type = 'l', main = 'beta_11 samples without label fixing')
+plot(beta_samples_burned[2,1,], type = 'l', main = 'beta_21 samples without label fixing')
+plot(beta_samples_burned[3,1,], type = 'l', main = 'beta_31 samples without label fixing')
+plot(beta_samples_burned[4,1,], type = 'l', main = 'beta_41 samples without label fixing')
+plot(beta_samples_burned[1,2,], type = 'l', main = 'beta_12 samples without label fixing')
+plot(beta_samples_burned[2,2,], type = 'l', main = 'beta_22 samples without label fixing')
+plot(beta_samples_burned[3,2,], type = 'l', main = 'beta_32 samples without label fixing')
+plot(beta_samples_burned[4,2,], type = 'l', main = 'beta_42 samples without label fixing')
+
+plot(reordered_beta_samples_stephens[1,1,], type = 'l', main = 'Trace plot of beta_11 with label fixing by Stephens method')
+plot(reordered_beta_samples_stephens[2,1,], type = 'l', main = 'Trace plot of beta_21 with label fixing by Stephens method')
+plot(reordered_beta_samples_stephens[3,1,], type = 'l', main = 'Trace plot of beta_31 with label sixing by Stephens method')
+plot(reordered_beta_samples_stephens[4,1,], type = 'l', main = 'Trace plot of beta_41 with label sixing by Stephens method (noise variable)')
+plot(reordered_beta_samples_stephens[1,2,], type = 'l', main = 'Trace plot of beta_12 with label fixing by Stephens method')
+plot(reordered_beta_samples_stephens[2,2,], type = 'l', main = 'Trace plot of beta_22 with label fixing by Stephens method')
+plot(reordered_beta_samples_stephens[3,2,], type = 'l', main = 'Trace plot of beta_32 with label fixing by Stephens method')
+plot(reordered_beta_samples_stephens[4,2,], type = 'l', main = 'Trace plot of beta_42 with label fixing by Stephens method (noise variable)')
+
+
+
+```
+
+## Trace plots for beta - after relevelling
+
+```{r echo=FALSE}
+
+plot(relevelled_beta_samples_stephens_new_baseline[1,1,], type = 'l', main = 'beta_11 samples relevelled')
+plot(relevelled_beta_samples_stephens_new_baseline[2,1,], type = 'l', main = 'beta_21 samples relevelled')
+plot(relevelled_beta_samples_stephens_new_baseline[3,1,], type = 'l', main = 'beta_31 samples relevelled')
+plot(relevelled_beta_samples_stephens_new_baseline[4,1,], type = 'l', main = 'beta_41 samples relevelled')
+plot(relevelled_beta_samples_stephens_new_baseline[1,3,], type = 'l', main = 'beta_12 samples relevelled')
+plot(relevelled_beta_samples_stephens_new_baseline[2,3,], type = 'l', main = 'beta_22 samples relevelled')
+plot(relevelled_beta_samples_stephens_new_baseline[3,3,], type = 'l', main = 'beta_32 samples relevelled')
+plot(relevelled_beta_samples_stephens_new_baseline[4,3,], type = 'l', main = 'beta_42 samples relevelled')
+
+
+```
+
+
+## Trace plots for gamma parameters 
+```{r echo=FALSE}
+
+plot(gamma_samples_burned[1,], type = 'l', main = 'Trace plot of gamma_1')
+plot(gamma_samples_burned[2,], type = 'l', main = 'Trace plot of gamma_2')
+plot(gamma_samples_burned[3,], type = 'l', main = 'Trace plot of gamma_3')
+plot(gamma_samples_burned[4,], type = 'l', main = 'Trace plot of gamma_4 (noise variable)')
+
+```
+
+## Density plots for $\beta$ (with respect to category 2 as baseline)
+
+```{r echo=FALSE}
+
+plot(density(beta_samples_burned[1,1,]), main = 'Density plot of beta_11 without label fixing')
+plot(density(beta_samples_burned[2,1,]), main = 'Density plot of beta_21 without label fixing')
+plot(density(beta_samples_burned[3,1,]), main = 'Density plot of beta_31 without label fixing')
+plot(density(beta_samples_burned[4,1,]), main = 'Density plot of beta_41 without label fixing')
+plot(density(beta_samples_burned[1,2,]), main = 'Density plot of beta_12 without label fixing')
+plot(density(beta_samples_burned[2,2,]), main = 'Density plot of beta_22 without label fixing')
+plot(density(beta_samples_burned[3,2,]), main = 'Density plot of beta_32 without label fixing')
+plot(density(beta_samples_burned[4,2,]), main = 'Density plot of beta_42 without label fixing')
+
+plot(density(reordered_beta_samples_stephens[1,1,]), main = 'Density plot of beta_11 with Stephens relabelling')
+plot(density(reordered_beta_samples_stephens[2,1,]), main = 'Density plot of beta_21 with Stephens relabelling')
+plot(density(reordered_beta_samples_stephens[3,1,]), main = 'Density plot of beta_31 with Stephens relabelling')
+plot(density(reordered_beta_samples_stephens[4,1,]), main = 'Density plot of beta_41 with Stephens relabelling')
+plot(density(reordered_beta_samples_stephens[1,2,]), main = 'Density plot of beta_12 with Stephens relabelling')
+plot(density(reordered_beta_samples_stephens[2,2,]), main = 'Density plot of beta_22 with Stephens relabelling')
+plot(density(reordered_beta_samples_stephens[3,2,]), main = 'Density plot of beta_32 with Stephens relabelling')
+plot(density(reordered_beta_samples_stephens[4,2,]), main = 'Density plot of beta_42 with Stephens relabelling')
+
+```
+
+
+## Density plots for relevelled beta
+
+```{r echo=FALSE}
+
+plot(density(relevelled_beta_samples_stephens_new_baseline[1,1,]), main = 'Density plot of beta_11 after relevelling')
+plot(density(relevelled_beta_samples_stephens_new_baseline[2,1,]), main = 'Density plot of beta_21 after relevelling')
+plot(density(relevelled_beta_samples_stephens_new_baseline[3,1,]), main = 'Density plot of beta_31 after relevelling')
+plot(density(relevelled_beta_samples_stephens_new_baseline[4,1,]), main = 'Density plot of beta_41 after relevelling')
+plot(density(relevelled_beta_samples_stephens_new_baseline[1,3,]), main = 'Density plot of beta_12 after relevelling')
+plot(density(relevelled_beta_samples_stephens_new_baseline[2,3,]), main = 'Density plot of beta_22 after relevelling')
+plot(density(relevelled_beta_samples_stephens_new_baseline[3,3,]), main = 'Density plot of beta_32 after relevelling')
+plot(density(relevelled_beta_samples_stephens_new_baseline[4,3,]), main = 'Density plot of beta_42 after relevelling')
+
+
+```
+
+
+
+

@@ -1,0 +1,94 @@
+---
+title: "Trying to Run Albert and Chib implementation"
+output: html_notebook
+---
+
+```{r}
+
+library(daarem)
+library(truncnorm)
+
+```
+
+```{r}
+
+n <- 500
+p <- 2
+beta_vec <- c(3,5,7)
+ones <- matrix(rep(1,n), nrow = n)
+X <- cbind(ones,matrix(rnorm(n*p,0,10),nrow = n))
+Y <- ProbitSimulate(beta.vec = beta_vec, X = X)
+
+#Initialising variables
+beta <- c(3,5,7)
+z <- rnorm(n)
+
+
+count <- 1
+n_iter <- 10000
+
+beta_samples <- array(0, dim = c(1,p+1,n_iter))
+z_samples <- array(0, dim = c(n,1,n_iter))
+
+while(count < n_iter){
+  for (i in 1:n){
+    mu <- X[i,]%*%beta
+    if(Y[i] == 1){
+      z[i] <- rtruncnorm(1,a = 0, b = Inf, mean = mu, sd  = 1)
+    } else {
+      z[i] <- rtruncnorm(1,a = -Inf, b = 0, mean = mu, sd  = 1)
+    }
+  }
+  z_samples[,,count] <- z
+  beta_post_var <- solve(t(X) %*% X)
+  beta_post_mean <- beta_post_var %*% (t(X) %*% z)
+  beta <- mvrnorm(1,mu = beta_post_mean, Sigma = beta_post_var)
+  beta_samples[,,count] <- beta 
+  print(count)
+  count <- count + 1
+}
+
+
+```
+
+
+```{r}
+
+# Initialize variables
+#beta <- rnorm(p+1)
+beta <- c(3,5,7)
+z <- rnorm(n)
+count <- 1
+n_iter <- 10000
+
+# Update beta_samples dimensions
+beta_samples <- matrix(0, nrow = p+1, ncol = n_iter)
+z_samples <- array(0, dim = c(n, n_iter))
+
+while(count <= n_iter){
+  for (i in 1:n){
+    mu <- X[i, ] %*% beta
+    # Sample z based on the observed Y
+    if(Y[i] == 1){
+      z[i] <- rtruncnorm(1, a = 0, b = Inf, mean = mu, sd = 1)
+    } else {
+      z[i] <- rtruncnorm(1, a = -Inf, b = 0, mean = mu, sd = 1)
+    }
+  }
+  # Store z samples
+  z_samples[, count] <- z
+  
+  # Sample beta using updated dimensions and mean as a vector
+  beta <- mvrnorm(1, mu = as.vector(solve(t(X) %*% X) %*% (t(X) %*% z)), 
+                     Sigma = solve(t(X) %*% X))
+  
+  # Store beta samples correctly in matrix form
+  beta_samples[, count] <- beta
+  
+  print(count)
+  count <- count + 1
+}
+
+```
+
+

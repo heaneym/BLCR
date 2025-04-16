@@ -1,0 +1,383 @@
+---
+title: "Bayesian LCR Sampler with adaptive Metropolis within Gibbs -updated code"
+output: html_notebook
+---
+
+```{r}
+library(poLCA)
+library(MCMCpack)
+library(BayesLCA)
+library(matrixNormal)
+```
+
+Creating function for the sampler
+```{r}
+Bayes_LCR <- function(Y,X,initialsigma,target_accept = 0.234, G, n_iter, burn_in, thin, adapt_interval, verbose = FALSE, lessverbose = FALSE){
+  p <- ncol(as.matrix(X)) #Getting the number of covariates as p
+  #append 1 to X for \beta_0 coeff
+  if (is.vector(X)){
+    ones <- rep(1,length(X))
+    X <- cbind(ones,X)
+  } else{
+    ones <- rep(1,nrow(X))
+    X <- cbind(ones,X)
+  }
+  n <- nrow(as.matrix(Y)) #number of observations
+  M <- ncol(as.matrix(Y)) #number of variables
+  K <- apply(Y, 2, function(x) length(unique(x))) #Vector to indicate the number of categories in each variable
+  alpha <- rep(1, max(K))  #alpha parameters for theta_{gj} dirichlet distributions
+  theta <- array(0, dim = c(G, M, max(K)))  #Initialising theta 
+  for (g in 1:G) { #generating a sample from theta_{gj} vectors for each g and j}
+    for (j in 1:M) {
+      theta[g, j, 1:K[j]] <- rdirichlet(1, alpha[1:K[j]])  
+    }
+  }
+  beta <- matrix(rnorm((G-1)*(p+1),2,0.5), nrow = (G-1), ncol = (p+1))
+  mu_mat <- X%*%t(beta)
+  exp_mu_mat <- exp(mu_mat)
+  gamma_mat <- cbind(exp_mu_mat/(1+rowSums(exp_mu_mat)), 1/(1+rowSums(exp_mu_mat)))
+  log_gamma_mat <- log(gamma_mat)
+  
+  z <- array(0, dim = c(n,G)) #Initialising z matrix
+  S <- array(0, dim = c(M,G,max(K))) #Initialising S variable
+  #Initialising arrays to store samples
+  beta_samples <- array(0,dim = c(G-1,p+1,n_iter))
+  theta_samples <- array(0,dim = c(G, M, max(K),n_iter))
+  w <- array(0,dim = c(n,G)) #Initialising w matrix
+  log_theta <- log(theta)
+  #This code works (?) but i could get it a bit more efficient without the loops maybe
+  log_sum <- matrix(0, nrow = n, ncol = G)
+  for (i in 1:n){
+    for(g in 1:G){
+      for (j in 1:M){
+        y_ij = Y[i,j]
+        log_sum[i,g] <- log_sum[i,g] + (y_ij <= K[j])*log_theta[g,j,y_ij]
+      }
+    }
+  }
+  log_w <- log_gamma_mat + log_sum
+  w <- exp(log_w)
+  z <- t(apply(w, 1, function(prob) rmultinom(1, 1, prob)))
+  z_samples <- array(0, dim = c(n,G,n_iter))
+  accept_count <- 0 #number of accepted samples in each batch
+  total_proposals <- 0 #counter for proposals made in each batch
+  cont_accept_count <- 0 #number of accepted samples overall
+  cont_total_proposals <- 0 #number of total proposals counter
+  sigma1 <- diag(initialsigma,G-1) 
+  sigma2 <- diag(initialsigma,p+1)
+  #setting acceptance rate and list to store values of acceptance rate
+  r_accept <- 0
+  r_accept_list <- c()
+  count <- 1 #counter for loop
+  
+  #Precalculating these to use for calculating S in the loop
+  Y_flat <- as.vector(t(Y))
+  I <- rep(1:n, each = M * G)
+  J <- rep(rep(1:M, each = G), n)
+  G_0 <- rep(1:G, times = n * M)
+  K_0 <- rep(Y_flat, each = G)
+  
+  while(count < n_iter){
+    z_binded_M <- do.call(cbind, replicate(M, z, simplify = FALSE))
+    z_flat <- as.vector(t(z_binded_M))
+    S_df <- data.frame(
+      i = I,         
+      j = J,      
+      g = G_0,         
+      k = K_0,       
+      z_value = z_flat 
+    )
+    S_df <- S_df[S_df$z_value == 1, ]
+    S <- with(S_df, table(g, j, k))
+    
+    sapply(1:G, function(g) {
+      sapply(1:M, function(j) {
+        # Generate theta values for each g and j
+        theta[g, j, 1:K[j]] <<- rdirichlet(1, alpha[1:K[j]] + S[g, j, 1:K[j]])
+      })
+    })
+    theta_samples[,,,count] <- theta #Storing theta value
+    
+    mu_mat <- X%*%t(beta)
+    exp_mu_mat <- exp(mu_mat)
+    gamma_mat <- cbind(exp_mu_mat/(1+rowSums(exp_mu_mat)), 1/(1+rowSums(exp_mu_mat)))
+    log_gamma_mat <- log(gamma_mat)
+    log_theta <- log(theta)
+    log_sum <- matrix(0, nrow = n, ncol = G)
+    for (i in 1:n){
+      for(g in 1:G){
+        for (j in 1:M){
+          y_ij = Y[i,j]
+          log_sum[i,g] <- log_sum[i,g] + (y_ij <= K[j])*log_theta[g,j,y_ij]
+        }
+      }
+    }
+    log_w <- log_gamma_mat + log_sum
+    w <- exp(log_w)
+    z <- t(apply(w, 1, function(prob) rmultinom(1, 1, prob)))
+    z_samples[,,count] <- z
+    beta_proposals <- rmatnorm(M = matrix(beta, nrow = G-1, ncol = p+1, byrow = TRUE), U = sigma1, V = sigma2)
+    total_proposals <- total_proposals + 1
+    cont_total_proposals <- cont_total_proposals + 1
+    mu_mat_prop <- X%*%t(beta_proposals)
+    exp_mu_mat_prop <- exp(mu_mat_prop)
+    gamma_mat_prop <- cbind(exp_mu_mat_prop/(1+rowSums(exp_mu_mat_prop)),1/(1+rowSums(exp_mu_mat_prop)))
+    log_gamma_mat_prop <- log(gamma_mat_prop)
+    log_acc_arg <- sum(z * (log_gamma_mat_prop - log_gamma_mat))
+    acc_arg <- exp(log_acc_arg)
+    if(runif(1) <= min(1,acc_arg)){ #accept-reject step
+      beta <- beta_proposals
+      accept_count <- accept_count + 1
+      cont_accept_count <- cont_accept_count + 1
+      #print("Accepted")
+    } else{
+      #print("rejected")
+    }
+    beta_samples[,,count] <- beta
+    if (count > 0 && count %% adapt_interval == 0) {
+      r_accept <- accept_count / total_proposals  # Calculate acceptance rate
+      r_accept_list <- c(r_accept_list,r_accept)
+      if (verbose == TRUE){
+        #print( paste("Iteration" , count, " completed, batch acceptance rate is " ,r_accept, ", continuous acceptance rate is ", continuous_acceptance_rate))
+        print("Iteration:", count, " completed, batch acceptance rate is " ,r_accept, ", continuous acceptance rate is ", continuous_acceptance_rate)
+      }
+      delta <- min(0.01,count^(-(1/2)))
+      if (r_accept < target_accept) {
+          sigma1 <- sigma1 * (1-delta)  # Shrink the covariance matrices 
+          sigma2 <- sigma2 * (1-delta)
+          if(verbose == TRUE){
+            print("shrink")
+          }
+      } else if (r_accept > target_accept){
+           sigma1 <- sigma1 * (1+delta)  # Expand the covariance matrices 
+           sigma2 <- sigma2 * (1+delta)
+          if(verbose == TRUE){
+            print("expand")
+          }
+      }
+      accept_count <- 0 #reset the batch accept count and total proposal count
+      total_proposals <- 0
+    }
+    count = count + 1 #increment the iteration count
+    continuous_acceptance_rate <- cont_accept_count/cont_total_proposals
+    if(lessverbose == TRUE){
+      if(count %% 500 == 0){
+        cat("\rIteration:", count, ", continuous AR: ", continuous_acceptance_rate)
+        flush.console()
+      }
+    }
+    #print(paste("Iteration ",count, " completed, acceptance rate is", continuous_acceptance_rate))
+    #print(count)
+  }
+  beta_samples <- beta_samples[,,(burn_in+1):(n_iter-1), drop=FALSE]
+  theta_samples <- theta_samples[,,,(burn_in+1):(n_iter-1), drop=FALSE]
+  z_samples <- z_samples[,,(burn_in+1):(n_iter-1), drop=FALSE]
+  beta_samples_thin <- beta_samples[,,seq(1, dim(beta_samples)[3], by = thin), drop = FALSE]
+  theta_samples_thin <- theta_samples[,,,seq(1, dim(theta_samples)[4], by = thin), drop = FALSE]
+  z_samples_thin <- z_samples[,,seq(1, dim(z_samples)[3], by = thin), drop = FALSE]
+  theta_estimate <- apply(theta_samples_thin, c(1, 2, 3), mean)
+  beta_estimate <- apply(beta_samples_thin, c(1, 2), mean)
+  beta_sd <- apply(beta_samples_thin, c(1, 2), sd)
+  theta_sd <- apply(theta_samples_thin, c(1, 2, 3), sd)
+  x <- list(beta_samples = beta_samples_thin,theta_samples = theta_samples_thin,z_samples=z_samples_thin,beta_estimate=beta_estimate,theta_estimate=theta_estimate,beta_sd=beta_sd,theta_sd=theta_sd)
+  return(x)
+}
+```
+
+Testing the sampler on a 2 group simulated data set
+```{r}
+
+set.seed(123)
+n <- 1000
+
+data <- poLCA.simdata(N = n, probs = NULL, nclass = 2, ndv = 4, nresp = NULL, x = NULL, niv = 2, b =matrix(c(1,10),nrow = 2, ncol = 1), P = NULL, missval = FALSE, pctmiss = NULL)
+
+Y <- cbind(data[["dat"]][["Y1"]], data[["dat"]][["Y2"]],data[["dat"]][["Y3"]],data[["dat"]][["Y4"]])
+X <- cbind(data[["dat"]][["X1"]])
+
+BLCR1 <- Bayes_LCR(Y,X,0.2,G = 2, n_iter = 50000, burn_in = 1, thin = 1, adapt_interval = 50, verbose = FALSE, lessverbose = TRUE)
+```
+
+
+Trace plots for $\beta$
+```{r}
+par(mfrow = c(2, 1), mar = c(2,2,2,2))
+for (i in 1:(G-1)) {
+  for (j in 1:(p+1)) {
+    values <- BLCR1$beta_samples[i,j,]
+    plot(values, type = 'l', main = bquote("Trace plot for " ~ beta[.(i)][.(j)]),
+         xlab = "Index", ylab = "Value")
+  }
+}
+```
+
+```{r}
+truebeta <- c(1,10)
+
+paste("True value of Beta: ", paste(truebeta, collapse = ", "))
+paste("beta estimate: ", paste(BLCR1$beta_estimate, collapse = ", "))
+
+
+truetheta <-  data[["probs"]]
+cat("\n\n\n\nTrue value of theta:\n", paste(lapply(truetheta, function(x) paste(capture.output(print(x)), collapse = "\n")), collapse = "\n\n"))
+
+#Going to change the layout of the theta so it looks like the true theta in order to compare
+theta_estimate1 <- list()
+for (j in 1:M){
+  theta_estimate1[[j]] <-matrix(0, ncol = K[j], nrow = G)
+  for (k in 1:K[j]){
+    for (g in 1:G){
+      theta_estimate1[[j]][g,k] <- BLCR1$theta_estimate[g,j,k]
+    }
+  }
+}
+
+cat("\n\n\n\n\n","theta estimate:\n", paste(lapply(theta_estimate1, function(x) paste(capture.output(print(x)), collapse = "\n")), collapse = "\n\n"))
+
+```
+
+
+Density Plots of beta
+```{r}
+
+par(mfrow = c(2, 1), mar = c(2,2,2,2))
+for (i in 1:(G-1)) {
+  for (j in 1:(p+1)) {
+    values <- BLCR1$beta_samples[i,j,]
+    plot(density(values), main = bquote("Density plot for " ~ beta[.(i)][.(j)]),
+         xlab = "Index", ylab = "Value")
+  }
+}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Debugging - gonna put it outside the function for now
+
+```{r}
+
+set.seed(123)
+
+data <- poLCA.simdata(N = 5000, probs = NULL, nclass = 2, ndv = 4, nresp = NULL, x = NULL, niv = 2, b =matrix(c(1,10),nrow = 2, ncol = 1), P = NULL, missval = FALSE, pctmiss = NULL)
+
+Y <- cbind(data[["dat"]][["Y1"]], data[["dat"]][["Y2"]],data[["dat"]][["Y3"]],data[["dat"]][["Y4"]])
+X <- cbind(data[["dat"]][["X1"]])
+
+
+  #beta_G <- rep(0,p+1)
+  #beta <- rbind(matrix(rnorm((G-1)*(p+1),2,0.5), nrow = (G-1), ncol = (p+1)), beta_G)
+  #beta_no_G <- beta[-G,]
+  
+
+  #old code for z
+  #for (i in 1:n){
+  #  z[i,] <- rmultinom(1,1,w[i,])
+  #}
+  #for (i in 1:n) {
+  #  for (g in 1:G) {
+  #    p1 <- 1
+  #    for (j in 1:M){
+  #      for(k in 1:K[j]){
+  #        p1 <- p1*theta[g,j,k]^(Y[i,j] == k) # calculating double product. 
+  #      }
+  #    }
+  #    w[i,g] <- gamma_matrix[g,i]*p1 #Updating entries of w. 
+  #  }
+  #}
+  
+  
+  #Precalculating these to use for calculating S in the loop
+  Y_flat <- as.vector(t(Y))
+  I <- rep(1:n, each = M * G)
+  J <- rep(rep(1:M, each = G), n)
+  G_0 <- rep(1:G, times = n * M)
+  K_0 <- rep(Y_flat, each = G)
+  
+  while(count < n_iter){
+    
+    
+    
+    
+    #for (j in 1:M){
+    #  for (g in 1:G){
+    #    for (k in 1:K[j]){
+    #      S[j,g,k] = sum((Y[,j] == k)*z[,g]) #Update values of S
+    #    }
+    #  }
+    #}  
+    
+    
+    
+    
+    #for (g in 1:G){
+    #  for (i in 1:n){
+    #    gamma_matrix[g,i] <- gamma_vec(beta,g,X,i,G) #Updating gamma matrix values
+    #  }
+    #}
+    #for (i in 1:n) { #Creating w_i vectors for each i and then generating z_i vectors from multinomial(w_i)
+    #  for (g in 1:G) {
+    #    p1 <- 1
+    #    for (j in 1:M){
+    #      for(k in 1:K[j]){
+    #        p1 <- p1*theta[g,j,k]^(Y[i,j] == k) # calculating double product. 
+    #      }
+    #    }
+    #    w[i,g] <- gamma_matrix[g,i]*p1 #Updating entries of w. 
+    #  }
+    #  z[i,] <- rmultinom(1,1,w[i,])
+    #}
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    #log_acc_arg <- 0
+    #for (g in 1:(G)){
+    #  for (i in 1:n){
+    #    log_acc_arg <- log_acc_arg + z[i,g]*(log(gamma_vec(beta_proposals,g,X,i,G)) - log(gamma_vec(beta,g,X,i,G)))
+    #  }
+    #}
+    
+    
+    
+    
+    #print( paste("acceptance ratio is " ,acc_arg))
+    
+    #print(paste("Iteration ",count, " completed, acceptance rate is", continuous_acceptance_rate))
+    #print(count)
+  }
+  beta_samples <- beta_samples[,,(burn_in+1):(n_iter-1), drop=FALSE]
+  theta_samples <- theta_samples[,,,(burn_in+1):(n_iter-1), drop=FALSE]
+  theta_estimate <- apply(theta_samples, c(1, 2, 3), mean)
+  beta_estimate <- apply(beta_samples, c(1, 2), mean)
+  beta_sd <- apply(beta_samples, c(1, 2), sd)
+  theta_sd <- apply(theta_samples, c(1, 2, 3), sd)
+  z_samples <- z_samples[,,(burn_in+1):(n_iter-1), drop=FALSE]
+  x <- list(beta_samples = beta_samples,theta_samples = theta_samples,z_samples=z_samples,beta_estimate=beta_estimate,theta_estimate=theta_estimate,beta_sd=beta_sd,theta_sd=theta_sd)
+  return(x)
+
+```
+
+
+
+
+
+
+

@@ -1,0 +1,134 @@
+---
+title: "BLCR with Multinomial Probit for >2 classes"
+output: html_notebook
+---
+
+```{r}
+
+library(ggplot2)
+library(poLCA)
+library(MCMCpack)
+library(BayesLCA)
+library(matrixNormal)
+library(truncnorm)
+library(profvis)
+library(Rcpp)
+library(optimParallel)
+source("./functions_for_modular_code_probit_BLCR_polytomous.R", encoding = "UTF-8")
+source("./generate_BLCR_probit_binary.R")
+
+```
+
+
+
+```{r}
+#Each theta_i is the probabilities for a given variable
+#The row g of theta_i is the probabilities for the responses 1,2,3,... given they are in group g
+G <- 3
+theta1 <- matrix(c(0.8,0.2,0.2,0.8,0.7,0.3), nrow = G, byrow = TRUE)
+theta3 <- matrix(c(0.2,0.8,0.8,0.2,0.2,0.8), nrow = G, byrow = TRUE)
+theta2 <- theta1
+theta4 <- theta3
+real_theta <- list(theta1,theta2,theta3,theta4)
+
+data <- prepare_data_poLCA_covariates(seed = 123, n = 1000, M = 4, p = 1, beta = c(1,3,-1,-4), theta = real_theta, G = 3)
+X <- data$X
+Y <- data$Y
+init <- initialise_variables(G, X = X, Y = Y)
+
+
+Y_flat <- init$Y_flat
+I <- init$I
+J <- init$J
+G_0 <- init$G_0
+K_0 <- init$K_0
+M <- init$M
+z <- init$z
+w <- init$w
+alpha <- init$alpha
+theta <- init$theta
+beta <- init$beta
+theta <- init$theta
+K <- init$K
+X <- init$X
+Y <- init$Y
+C <- init$C
+n <- init$n
+p <- init$p
+eta <- init$eta
+Sigma <- init$Sigma
+n_samples <- 1000
+
+S <- S_update(Y_flat = Y_flat, I = I, J = J, G_0 = G_0, K_0 = K_0, M = M, z = z) 
+theta <- theta_update(alpha = alpha, G = 3, M = 4,K = K, S = S,theta = theta)
+mu <- X%*%t(beta)
+C <- C_update(z = z, mu = mu, Sigma = Sigma, n = n, G = G,C = C)
+gamma <- gamma_update(mu = mu, Sigma = Sigma, n = n, G = G, n_samples = n_samples)
+w <- w_update(gamma = gamma, theta = theta)
+z <- z_update(w)
+U <- kronecker(diag(G),X)
+Omega <- kronecker(diag(n),Sigma)
+Omega_chol <- chol(Omega)
+Omega_inv <- chol2inv(Omega_chol)
+Omega_det <- prod(diag(Omega_chol))^2
+C_vec <- as.vector(C)
+beta <- beta_update(U = U, Omega = Omega, Omega_inv = Omega_inv, C_vec = C_vec)
+#init_eta <- runif(length(eta), min = -3, max = 3)
+
+
+
+cl <- makeCluster(detectCores() - 1)
+clusterExport(cl, varlist = c("eta_density_unnormalised", "Sigma_matrix_update", "G", "Sigma", "C_vec", "mu", "n"))
+
+
+#Having trouble here with the Hessian matrix for updating eta - will come back to this.
+eta_up <- eta_update(init_eta = init_eta)
+eta <- eta_up$eta
+init_eta <- eta_up$eta_mode
+
+
+
+stopCluster(cl)
+```
+
+
+```{r}
+
+n_iter <- 100
+beta_samples <- array(0, dim = c(G,p+1,n_iter))
+cl <- makeCluster(detectCores() - 1)
+clusterExport(cl, varlist = c("eta_density_unnormalised", "Sigma_matrix_update", "G", "Sigma", "C_vec", "mu", "n"))
+for (count in 1:n_iter){
+  S <- S_update(Y_flat = Y_flat, I = I, J = J, G_0 = G_0, K_0 = K_0, M = M, z = z) 
+  theta <- theta_update(alpha = alpha, G = 3, M = 4,K = K, S = S,theta = theta)
+  mu <- X%*%t(beta)
+  C <- C_update(z = z, mu = mu, Sigma = Sigma, n = n, G = G,C = C)
+  gamma <- gamma_update(mu = mu, Sigma = Sigma, n = n, G = G, n_samples = n_samples)
+  w <- w_update(gamma = gamma, theta = theta)
+  z <- z_update(w)
+  U <- kronecker(diag(G),X)
+  Omega <- kronecker(diag(n),Sigma)
+  Omega_chol <- chol(Omega)
+  Omega_inv <- chol2inv(Omega_chol)
+  Omega_det <- prod(diag(Omega_chol))^2
+  C_vec <- as.vector(C)
+  beta <- beta_update(U = U, Omega = Omega, Omega_inv = Omega_inv, C_vec = C_vec)
+  #init_eta <- runif(length(eta), min = -3, max = 3)
+  #Having trouble here with the Hessian matrix for updating eta - will come back to this.
+  eta_up <- eta_update(init_eta = init_eta)
+  eta <- eta_up$eta
+  init_eta <- eta_up$eta_mode
+  beta_samples[,,count] <- beta
+  print(count)
+}
+
+stopCluster(cl)
+
+
+```
+
+
+
+
+
+

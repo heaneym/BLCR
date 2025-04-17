@@ -1,0 +1,79 @@
+"1","
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuXG4jbG9va2luZyBhdCB0aGUgZXN0aW1hdGVzIGFuZCBwcm9wb3J0aW9uc1xuXG5iZXRhX21lYW4gPC0gYXBwbHkoYmV0YV9zYW1wbGVzX3JlbGV2ZWxsZWQsIGMoMSwyKSwgbWVhbilcbmJldGFfc2QgPC0gYXBwbHkoYmV0YV9zYW1wbGVzX3JlbGV2ZWxsZWQsIGMoMSwyKSwgc2QpXG5nYW1tYV9pbmNsdXNpb25fcHJvcG9ydGlvbiA8LSBhcHBseShnYW1tYV9zYW1wbGVzX3RoaW4sIDEsIG1lYW4pXG5udV9pbmNsdXNpb25fcHJvcG9ydGlvbiA8LSBhcHBseShudV9zYW1wbGVzX3RoaW4sIDEsIG1lYW4pXG5cbiNjb2luY2lkZW5jZSBtYXRyaXggZm9yIHRoZSBwcm9wb3J0aW9uIG9mIHRpbWVzIGl0ZW0gYW5kIHByZWRpY3RvciB2YXJpYWJsZXMgd2VyZSBpbmNsdWRlZCB0b2dldGhlclxuXG5nYW1tYV9jb2luY2lkZW5jZSA8LSAoZ2FtbWFfc2FtcGxlc190aGluJSoldChnYW1tYV9zYW1wbGVzX3RoaW4pKS8oZGltKGdhbW1hX3NhbXBsZXNfdGhpbilbMl0pXG5udV9jb2luY2lkZW5jZSA8LSAobnVfc2FtcGxlc190aGluJSoldChudV9zYW1wbGVzX3RoaW4pKS8oZGltKG51X3NhbXBsZXNfdGhpbilbMl0pXG5cbiNXYW50IHRvIHByaW50IG91dCB0aGUgY29pbmNpZGVuY2UgbWF0cmljZXMgaGVyZSBhcyB3ZWxsIGFzIHN1bW1hcnkgc3RhdHMsIGFuZCBtYXliZSBzb21lIG90aGVyIGRpYWdub3N0aWNzPyBUaGVuIEkgbmVlZCB0byBwdXQgaW4gc29tZSBwbG90cyBsaWtlIHRyYWNlIGRlbnNpdHkgZXRjLlxuY2F0KFwiQ292YXJpYXRlIEluY2x1c2lvbiBDb2luY2lkZW5jZTpcXG5cIiwgY2FwdHVyZS5vdXRwdXQocHJpbnQoZ2FtbWFfY29pbmNpZGVuY2VbMjoocCsxKSwyOihwKzEpXSkpLCBzZXA9XCJcXG5cIilcbmBgYCJ9 -->
+
+```r
+
+#looking at the estimates and proportions
+
+beta_mean <- apply(beta_samples_relevelled, c(1,2), mean)
+beta_sd <- apply(beta_samples_relevelled, c(1,2), sd)
+gamma_inclusion_proportion <- apply(gamma_samples_thin, 1, mean)
+nu_inclusion_proportion <- apply(nu_samples_thin, 1, mean)
+
+#coincidence matrix for the proportion of times item and predictor variables were included together
+
+gamma_coincidence <- (gamma_samples_thin%*%t(gamma_samples_thin))/(dim(gamma_samples_thin)[2])
+nu_coincidence <- (nu_samples_thin%*%t(nu_samples_thin))/(dim(nu_samples_thin)[2])
+
+#Want to print out the coincidence matrices here as well as summary stats, and maybe some other diagnostics? Then I need to put in some plots like trace density etc.
+cat(\"Covariate Inclusion Coincidence:\n\", capture.output(print(gamma_coincidence[2:(p+1),2:(p+1)])), sep=\"\n\")
+```
+
+<!-- rnb-source-end -->
+"
+"0","```r
+
+#looking at the estimates and proportions
+
+beta_mean <- apply(beta_samples_relevelled, c(1,2), mean)
+beta_sd <- apply(beta_samples_relevelled, c(1,2), sd)
+gamma_inclusion_proportion <- apply(gamma_samples_thin, 1, mean)
+nu_inclusion_proportion <- apply(nu_samples_thin, 1, mean)
+
+#coincidence matrix for the proportion of times item and predictor variables were included together
+
+gamma_coincidence <- (gamma_samples_thin%*%t(gamma_samples_thin))/(dim(gamma_samples_thin)[2])
+nu_coincidence <- (nu_samples_thin%*%t(nu_samples_thin))/(dim(nu_samples_thin)[2])
+
+#Want to print out the coincidence matrices here as well as summary stats, and maybe some other diagnostics? Then I need to put in some plots like trace density etc.
+cat(\"Covariate Inclusion Coincidence:\n\", capture.output(print(gamma_coincidence[2:(p+1),2:(p+1)])), sep=\"\n\")
+```"
+"1","Covariate Inclusion Coincidence:
+
+[1] 0.009375
+"
+"1","
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY2F0KFwiSXRlbSBJbmNsdXNpb24gUHJvcG9ydGlvbjpcXG5cIiwgY2FwdHVyZS5vdXRwdXQocHJpbnQobnVfaW5jbHVzaW9uX3Byb3BvcnRpb24pKSwgc2VwPVwiXFxuXCIpXG5gYGAifQ== -->
+
+```r
+cat(\"Item Inclusion Proportion:\n\", capture.output(print(nu_inclusion_proportion)), sep=\"\n\")
+```
+
+<!-- rnb-source-end -->
+"
+"0","```r
+cat(\"Item Inclusion Proportion:\n\", capture.output(print(nu_inclusion_proportion)), sep=\"\n\")
+```"
+"1","Item Inclusion Proportion:
+
+ [1] 0.9627083 0.9466667 0.9562500 0.7910417 0.6560417 0.3762500 0.2295833 0.1995833 0.2656250
+[10] 0.2187500 0.2106250 0.2589583 0.1745833
+"
+"1","
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY2F0KFwiYmV0YSBtZWFuOlxcblwiLCBjYXB0dXJlLm91dHB1dChwcmludChiZXRhX21lYW4pKSwgc2VwPVwiXFxuXCIpXG5gYGAifQ== -->
+
+```r
+cat(\"beta mean:\n\", capture.output(print(beta_mean)), sep=\"\n\")
+```
+
+<!-- rnb-source-end -->
+"
+"0","```r
+cat(\"beta mean:\n\", capture.output(print(beta_mean)), sep=\"\n\")
+```"
+"1","beta mean:
+
+              [,1] [,2]
+[1,]  1.7703304166    0
+[2,] -0.0008244201    0
+"

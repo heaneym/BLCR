@@ -823,7 +823,7 @@ LCR_Gibbs <- function(X, Y, G = 2, theta_prior_param, beta_prior_mean, beta_prio
     log_logit_probs <- log(logit_probs)
     log_theta <- log(theta)
     w <- w_update_uncollapsed(log_logit_probs = log_logit_probs,log_theta = log_theta, Y = Y, G = G, n = n, M = M, K = K)
-    z <- z_update(w = w)
+    z <- z_update_uncollapsed(w = w)
     kappa <- kappa_update(z = z)
     omega <- omega_update(eta = eta, mu = mu, G = G, n = n, omega = omega)
     A <- A_update(kappa = kappa, omega = omega, C = C, G = G)
@@ -897,7 +897,7 @@ LCR_Gibbs_cov_sel <- function(X, Y, G = 2, theta_prior_param = NULL, beta_prior_
     log_logit_probs <- log(logit_probs)
     log_theta <- log(theta)
     w <- w_update_uncollapsed(log_logit_probs = log_logit_probs,log_theta = log_theta, Y = Y, G = G, n = n, M = M, K = K)
-    z <- z_update(w = w)
+    z <- z_update_uncollapsed(w = w)
     kappa <- kappa_update(z = z)
     omega <- omega_update(eta = eta, mu = mu, G = G, n = n, omega = omega)
     A <- A_update(kappa = kappa, omega = omega, C = C, G = G)
@@ -1182,11 +1182,12 @@ Y <- Y[,1:4]
 #We get that the 2nd variable (corresponding to beta = 0.7) is excluded almost all of the time in the model where we have the extra noise covariate. Needs to be looked into further.
 
 
-LCR_fit1 <- LCR_Gibbs_cov_sel(X = X, Y = Y, G = 2, theta_prior_param = c(1,1), beta_prior_mean = beta_prior_mean, beta_prior_cov = beta_prior_cov, burnin = 2000, thinby = 10, n_samples = 100000, verbose = TRUE)
+LCR_fit1 <- LCR_Gibbs_cov_sel(X = X, Y = Y, G = 2, theta_prior_param = c(1,1), beta_prior_mean = beta_prior_mean, beta_prior_cov = beta_prior_cov, burnin = 2000, thinby = 10, n_samples = 10000, verbose = TRUE)
 cov_incl_prop1 <- apply(LCR_fit1$gamma_samples, 1, mean)
 cov_incl_prop1
+coincidence <- ((LCR_fit1$gamma_samples)%*%t(LCR_fit1$gamma_samples))/(dim(LCR_fit1$gamma_samples)[2])
 
-#We have a very low inclusion proportion for the 1st, 3rd and 4th covariate. Gonna see how much these variables actually impact the probabilities.
+#Gonna see how much these variables actually impact the probabilities.
 mu_excl1 <- cbind(1,X)[,-c(2)]%*%realbeta[-c(2)]
 logit_prob_excl1 <- exp(mu_excl1)/(1+exp(mu_excl1))
 logit_prob_excl1 <- cbind(logit_prob_excl1, 1-logit_prob_excl1)

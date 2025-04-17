@@ -1,0 +1,31 @@
+"1","
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI3RyYWNlIHBsb3RzXG5cbnBhcihtZnJvdyA9IGMoMywyKSwgbWFyID0gYygzLDMsMiwxKSlcblxuZm9yIChpIGluIDE6ZGltKGJldGFfc2FtcGxlc19yZWxldmVsbGVkKVsxXSkge1xuICBwbG90KGJldGFfc2FtcGxlc19yZWxldmVsbGVkW2ksMSxdLCB0eXBlID0gXCJsXCIsIGNvbCA9IFwiYmx1ZVwiLCBtYWluID0gcGFzdGUoXCJiZXRhXCIsIGktMSksIHhsYWIgPSBcIkl0ZXJhdGlvblwiLCB5bGFiID0gXCJWYWx1ZVwiKVxufVxuYGBgIn0= -->
+
+```r
+#trace plots
+
+par(mfrow = c(3,2), mar = c(3,3,2,1))
+
+for (i in 1:dim(beta_samples_relevelled)[1]) {
+  plot(beta_samples_relevelled[i,1,], type = \"l\", col = \"blue\", main = paste(\"beta\", i-1), xlab = \"Iteration\", ylab = \"Value\")
+}
+```
+
+<!-- rnb-source-end -->
+"
+"0","```r
+#trace plots
+
+par(mfrow = c(3,2), mar = c(3,3,2,1))
+
+for (i in 1:dim(beta_samples_relevelled)[1]) {
+  plot(beta_samples_relevelled[i,1,], type = \"l\", col = \"blue\", main = paste(\"beta\", i-1), xlab = \"Iteration\", ylab = \"Value\")
+}
+```"
+"1","
+<!-- rnb-plot-begin eyJoZWlnaHQiOjM5MS44NDE4LCJ3aWR0aCI6NjM0LCJkcGkiOi0xLCJzaXplX2JlaGF2aW9yIjowLCJjb25kaXRpb25zIjpbXX0= -->
+
+<img src=\"data:image/png;base64,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\" />
+
+<!-- rnb-plot-end -->
+"

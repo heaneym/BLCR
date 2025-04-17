@@ -1,0 +1,133 @@
+"1","
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI3JlbW92aW5nIGJ1cm5pblxuXG5idXJuaW4gPC0gMjAwMFxuXG5idXJuZWRfc2FtcGxlcyA8LSBCTENSX3ZhcnNlbF9idXJuKGJ1cm5pbiA9IGJ1cm5pbiwgYmV0YV9zYW1wbGVzID0gYmV0YV9zYW1wbGVzLCBudV9zYW1wbGVzID0gbnVfc2FtcGxlcywgZ2FtbWFfc2FtcGxlcyA9IGdhbW1hX3NhbXBsZXMsIHpfc2FtcGxlcyA9IHpfc2FtcGxlcywgd19zYW1wbGVzID0gd19zYW1wbGVzLCBOX2dfc2FtcGxlcyA9IE5fZ19zYW1wbGVzLCBOX2dqa19zYW1wbGVzID0gTl9namtfc2FtcGxlcywgb21lZ2Ffc2FtcGxlcyA9IG9tZWdhX3NhbXBsZXMpXG5cbmxpc3QyZW52KGJ1cm5lZF9zYW1wbGVzLCBlbnZpciA9IC5HbG9iYWxFbnYpXG5gYGAifQ== -->
+
+```r
+#removing burnin
+
+burnin <- 2000
+
+burned_samples <- BLCR_varsel_burn(burnin = burnin, beta_samples = beta_samples, nu_samples = nu_samples, gamma_samples = gamma_samples, z_samples = z_samples, w_samples = w_samples, N_g_samples = N_g_samples, N_gjk_samples = N_gjk_samples, omega_samples = omega_samples)
+
+list2env(burned_samples, envir = .GlobalEnv)
+```
+
+<!-- rnb-source-end -->
+"
+"0","```r
+#removing burnin
+
+burnin <- 2000
+
+burned_samples <- BLCR_varsel_burn(burnin = burnin, beta_samples = beta_samples, nu_samples = nu_samples, gamma_samples = gamma_samples, z_samples = z_samples, w_samples = w_samples, N_g_samples = N_g_samples, N_gjk_samples = N_gjk_samples, omega_samples = omega_samples)
+
+list2env(burned_samples, envir = .GlobalEnv)
+```"
+"1","<environment: R_GlobalEnv>
+"
+"1","
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI3JlbGFiZWxsaW5nXG5cbnpfbWF0IDwtIG1hdHJpeCgwLCBucm93ID0gZGltKHpfc2FtcGxlc19idXJuZWQpWzNdLCBuY29sID0gbilcbmZvciAoaXRlciBpbiAxOmRpbSh6X3NhbXBsZXNfYnVybmVkKVszXSl7XG4gIHRlbXAgPC0gel9zYW1wbGVzX2J1cm5lZFssLGl0ZXJdXG4gIHRlbXBfcm93IDwtIGFwcGx5KHRlbXAsMSx3aGljaC5tYXgpXG4gIHpfbWF0W2l0ZXIsXSA8LSB0ZW1wX3JvdyBcbn1cbndfc2FtcGxlc19yZXNoYXBlIDwtIGFwZXJtKHdfc2FtcGxlc19idXJuZWQsYygzLDEsMikpXG5scyA8LSBsYWJlbC5zd2l0Y2hpbmcobWV0aG9kID0gXCJTVEVQSEVOU1wiLCB6ID0gel9tYXQsIEsgPSBHLCBwID0gd19zYW1wbGVzX3Jlc2hhcGUpXG5gYGAifQ== -->
+
+```r
+#relabelling
+
+z_mat <- matrix(0, nrow = dim(z_samples_burned)[3], ncol = n)
+for (iter in 1:dim(z_samples_burned)[3]){
+  temp <- z_samples_burned[,,iter]
+  temp_row <- apply(temp,1,which.max)
+  z_mat[iter,] <- temp_row 
+}
+w_samples_reshape <- aperm(w_samples_burned,c(3,1,2))
+ls <- label.switching(method = \"STEPHENS\", z = z_mat, K = G, p = w_samples_reshape)
+```
+
+<!-- rnb-source-end -->
+"
+"0","```r
+#relabelling
+
+z_mat <- matrix(0, nrow = dim(z_samples_burned)[3], ncol = n)
+for (iter in 1:dim(z_samples_burned)[3]){
+  temp <- z_samples_burned[,,iter]
+  temp_row <- apply(temp,1,which.max)
+  z_mat[iter,] <- temp_row 
+}
+w_samples_reshape <- aperm(w_samples_burned,c(3,1,2))
+ls <- label.switching(method = \"STEPHENS\", z = z_mat, K = G, p = w_samples_reshape)
+```"
+"1","
+    ......................................................................................
+    . Method                         Time (sec)           Status                         . 
+    ......................................................................................
+    . STEPHENS                       277.22               Converged (5 iterations)       . 
+    ......................................................................................
+
+    Relabelling all methods according to method STEPHENS ... done!
+    Retrieve the 1 permutation arrays by typing:
+        [...]$permutations$\"STEPHENS\"
+    Retrieve the 1 best clusterings: [...]$clusters
+    Retrieve the 1 CPU times: [...]$timings
+    Retrieve the 1 X 1 similarity matrix: [...]$similarity
+    Label switching finished. Total time: 281.4 seconds. 
+"
+"1","
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubHNfcGVybSA8LSBscyRwZXJtdXRhdGlvbnMkU1RFUEhFTlNcblxucmVsYWJlbGxlZF9zYW1wbGVzIDwtIEJMQ1JfdmFyc2VsX3JlbGFiZWwocGVybSA9IGxzX3Blcm0sIGJldGFfc2FtcGxlcyA9IGJldGFfc2FtcGxlc19idXJuZWQsIHpfc2FtcGxlcyA9IHpfc2FtcGxlc19idXJuZWQsIHdfc2FtcGxlcyA9IHdfc2FtcGxlc19idXJuZWQsIE5fZ2prX3NhbXBsZXMgPSBOX2dqa19zYW1wbGVzX2J1cm5lZCwgTl9nX3NhbXBsZXMgPSBOX2dfc2FtcGxlc19idXJuZWQsIG9tZWdhX3NhbXBsZXMgPSBvbWVnYV9zYW1wbGVzX2J1cm5lZClcblxubGlzdDJlbnYocmVsYWJlbGxlZF9zYW1wbGVzLCBlbnZpciA9IC5HbG9iYWxFbnYpXG5gYGAifQ== -->
+
+```r
+ls_perm <- ls$permutations$STEPHENS
+
+relabelled_samples <- BLCR_varsel_relabel(perm = ls_perm, beta_samples = beta_samples_burned, z_samples = z_samples_burned, w_samples = w_samples_burned, N_gjk_samples = N_gjk_samples_burned, N_g_samples = N_g_samples_burned, omega_samples = omega_samples_burned)
+
+list2env(relabelled_samples, envir = .GlobalEnv)
+```
+
+<!-- rnb-source-end -->
+"
+"0","```r
+ls_perm <- ls$permutations$STEPHENS
+
+relabelled_samples <- BLCR_varsel_relabel(perm = ls_perm, beta_samples = beta_samples_burned, z_samples = z_samples_burned, w_samples = w_samples_burned, N_gjk_samples = N_gjk_samples_burned, N_g_samples = N_g_samples_burned, omega_samples = omega_samples_burned)
+
+list2env(relabelled_samples, envir = .GlobalEnv)
+```"
+"1","<environment: R_GlobalEnv>
+"
+"1","
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI3RoaW5uaW5nXG5cbnRoaW4gPC0gMTBcblxudGhpbm5lZF9zYW1wbGVzIDwtIEJMQ1JfdmFyc2VsX3RoaW4odGhpbiA9IHRoaW4sIGJldGFfc2FtcGxlcyA9IHJlbGFiZWxsZWRfYmV0YV9zYW1wbGVzLCBudV9zYW1wbGVzID0gbnVfc2FtcGxlc19idXJuZWQsIGdhbW1hX3NhbXBsZXMgPSBnYW1tYV9zYW1wbGVzX2J1cm5lZCwgel9zYW1wbGVzID0gcmVsYWJlbGxlZF96X3NhbXBsZXMsIHdfc2FtcGxlcyA9IHJlbGFiZWxsZWRfd19zYW1wbGVzLCBOX2dfc2FtcGxlcyA9IHJlbGFiZWxsZWRfTl9nX3NhbXBsZXMsIE5fZ2prX3NhbXBsZXMgPSByZWxhYmVsbGVkX05fZ2prX3NhbXBsZXMsIG9tZWdhX3NhbXBsZXMgPSByZWxhYmVsbGVkX29tZWdhX3NhbXBsZXMpXG5cbmxpc3QyZW52KHRoaW5uZWRfc2FtcGxlcywgZW52aXIgPSAuR2xvYmFsRW52KVxuYGBgIn0= -->
+
+```r
+#thinning
+
+thin <- 10
+
+thinned_samples <- BLCR_varsel_thin(thin = thin, beta_samples = relabelled_beta_samples, nu_samples = nu_samples_burned, gamma_samples = gamma_samples_burned, z_samples = relabelled_z_samples, w_samples = relabelled_w_samples, N_g_samples = relabelled_N_g_samples, N_gjk_samples = relabelled_N_gjk_samples, omega_samples = relabelled_omega_samples)
+
+list2env(thinned_samples, envir = .GlobalEnv)
+```
+
+<!-- rnb-source-end -->
+"
+"0","```r
+#thinning
+
+thin <- 10
+
+thinned_samples <- BLCR_varsel_thin(thin = thin, beta_samples = relabelled_beta_samples, nu_samples = nu_samples_burned, gamma_samples = gamma_samples_burned, z_samples = relabelled_z_samples, w_samples = relabelled_w_samples, N_g_samples = relabelled_N_g_samples, N_gjk_samples = relabelled_N_gjk_samples, omega_samples = relabelled_omega_samples)
+
+list2env(thinned_samples, envir = .GlobalEnv)
+```"
+"1","<environment: R_GlobalEnv>
+"
+"1","
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYmV0YV9zYW1wbGVzX3JlbGV2ZWxsZWQgPC0gQkxDUl92YXJzZWxfYmV0YV9yZWxldmVsKGJldGFfc2FtcGxlcyA9IGJldGFfc2FtcGxlc190aGluKVxuXG5gYGAifQ== -->
+
+```r
+beta_samples_relevelled <- BLCR_varsel_beta_relevel(beta_samples = beta_samples_thin)
+
+```
+
+<!-- rnb-source-end -->
+"
+"0","```r
+beta_samples_relevelled <- BLCR_varsel_beta_relevel(beta_samples = beta_samples_thin)
+
+```"

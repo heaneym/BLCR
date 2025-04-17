@@ -1,0 +1,19 @@
+"1","
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI2hlYXRtYXAgZm9yIHRoZSBjb3ZhcmlhdGUgaW5jbHVzaW9uXG5cbnBoZWF0bWFwKGdhbW1hX2NvaW5jaWRlbmNlWzI6KHArMSksMjoocCsxKV0sIHNjYWxlID0gXCJub25lXCIsY2x1c3Rlcl9yb3dzID0gRkFMU0UsY2x1c3Rlcl9jb2xzID0gRkFMU0UsIGFuZ2xlX2NvbCA9IDAsIGNvbG9yID0gdmlyaWRpcygzMDApLCBtYWluICA9ICdDb3ZhcmlhdGUgSW5jbHVzaW9uIENvaW5jaWRlbmNlJywgZm9udHNpemVfcm93ID0gNiwgY2VsbHdpZHRoID0gNjAsIGxhYmVsc19yb3cgPSBwYXN0ZShcIlhcIiwxOnApLCBsYWJlbHNfY29sID0gcGFzdGUoXCJYXCIsMTpwKSlcbmBgYCJ9 -->
+
+```r
+#heatmap for the covariate inclusion
+
+pheatmap(gamma_coincidence[2:(p+1),2:(p+1)], scale = \"none\",cluster_rows = FALSE,cluster_cols = FALSE, angle_col = 0, color = viridis(300), main  = 'Covariate Inclusion Coincidence', fontsize_row = 6, cellwidth = 60, labels_row = paste(\"X\",1:p), labels_col = paste(\"X\",1:p))
+```
+
+<!-- rnb-source-end -->
+"
+"0","```r
+#heatmap for the covariate inclusion
+
+pheatmap(gamma_coincidence[2:(p+1),2:(p+1)], scale = \"none\",cluster_rows = FALSE,cluster_cols = FALSE, angle_col = 0, color = viridis(300), main  = 'Covariate Inclusion Coincidence', fontsize_row = 6, cellwidth = 60, labels_row = paste(\"X\",1:p), labels_col = paste(\"X\",1:p))
+```"
+"1","Error in cut.default(x, breaks = breaks, include.lowest = T) : 
+  'breaks' are not unique
+"

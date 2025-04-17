@@ -1,0 +1,35 @@
+"1","
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI2RlbnNpdHkgcGxvdHNcblxuXG5wYXIobWZyb3cgPSBjKDMsMiksIG1hciA9IGMoMywzLDIsMSkpXG5cbmZvciAoaSBpbiAxOmRpbShiZXRhX3NhbXBsZXNfdGhpbilbMV0pIHtcbiAgcGxvdChkZW5zaXR5KGJldGFfc2FtcGxlc190aGluW2ksMSxdKSwgdHlwZSA9IFwibFwiLCBtYWluID0gcGFzdGUoXCJiZXRhXCIsIGktMSksIHhsYWIgPSBcIkl0ZXJhdGlvblwiLCB5bGFiID0gXCJWYWx1ZVwiKVxufVxuXG5gYGAifQ== -->
+
+```r
+#density plots
+
+
+par(mfrow = c(3,2), mar = c(3,3,2,1))
+
+for (i in 1:dim(beta_samples_thin)[1]) {
+  plot(density(beta_samples_thin[i,1,]), type = \"l\", main = paste(\"beta\", i-1), xlab = \"Iteration\", ylab = \"Value\")
+}
+
+```
+
+<!-- rnb-source-end -->
+"
+"0","```r
+#density plots
+
+
+par(mfrow = c(3,2), mar = c(3,3,2,1))
+
+for (i in 1:dim(beta_samples_thin)[1]) {
+  plot(density(beta_samples_thin[i,1,]), type = \"l\", main = paste(\"beta\", i-1), xlab = \"Iteration\", ylab = \"Value\")
+}
+
+```"
+"1","
+<!-- rnb-plot-begin eyJoZWlnaHQiOjM5MS44NDE4LCJ3aWR0aCI6NjM0LCJkcGkiOi0xLCJzaXplX2JlaGF2aW9yIjowLCJjb25kaXRpb25zIjpbXX0= -->
+
+<img src=\"data:image/png;base64,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\" />
+
+<!-- rnb-plot-end -->
+"

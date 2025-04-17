@@ -1,0 +1,128 @@
+"1","
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuXG5wIDwtIDRcbkcgPC0gMlxubiA8LSA1MDBcblxuI2l0ZW0gcHJvYmFiaWxpdGllcyBcbnRoZXRhMSA8LSBtYXRyaXgoYygwLjYsMC40LDAuMiwwLjgpLCBucm93ID0gRywgYnlyb3cgPSBUUlVFKVxudGhldGEyIDwtIG1hdHJpeChjKDAuOCwwLjIsMC41LDAuNSksIG5yb3cgPSBHLCBieXJvdyA9IFRSVUUpXG50aGV0YTMgPC0gbWF0cml4KGMoMC43LDAuMywwLjQsMC42KSwgbnJvdyA9IEcsIGJ5cm93ID0gVFJVRSlcbnRoZXRhNCA8LSBtYXRyaXgoYygwLjYsMC40LDAuOSwwLjEpLCBucm93ID0gRywgYnlyb3cgPSBUUlVFKVxudGhldGE1IDwtIG1hdHJpeChjKDAuNSwwLjUsMC41LDAuNSksIG5yb3cgPSBHLCBieXJvdyA9IFRSVUUpXG50aGV0YTYgPC0gbWF0cml4KGMoMC40LDAuNiwwLjQsMC42KSwgbnJvdyA9IEcsIGJ5cm93ID0gVFJVRSlcbnRoZXRhNyA8LSBtYXRyaXgoYygwLjMsMC43LDAuMywwLjcpLCBucm93ID0gRywgYnlyb3cgPSBUUlVFKVxudGhldGE4IDwtIG1hdHJpeChjKDAuMiwwLjgsMC4yLDAuOCksIG5yb3cgPSBHLCBieXJvdyA9IFRSVUUpXG50aGV0YTkgPC0gbWF0cml4KGMoMC45LDAuMSwwLjksMC4xKSwgbnJvdyA9IEcsIGJ5cm93ID0gVFJVRSlcbnRoZXRhMTAgPC0gbWF0cml4KGMoMC42LDAuNCwwLjYsMC40KSwgbnJvdyA9IEcsIGJ5cm93ID0gVFJVRSlcbnRoZXRhMTEgPC0gbWF0cml4KGMoMC43LDAuMywwLjcsMC4zKSwgbnJvdyA9IEcsIGJ5cm93ID0gVFJVRSlcbnRoZXRhMTIgPC0gbWF0cml4KGMoMC44LDAuMiwwLjgsMC4yKSwgbnJvdyA9IEcsIGJ5cm93ID0gVFJVRSlcbnRoZXRhMTMgPC0gbWF0cml4KGMoMC4xLDAuOSwwLjEsMC45KSwgbnJvdyA9IEcsIGJ5cm93ID0gVFJVRSlcblxucmVhbHRoZXRhIDwtIGxpc3QodGhldGExLCB0aGV0YTIsIHRoZXRhMywgdGhldGE0LCB0aGV0YTUsIHRoZXRhNiwgdGhldGE3LCB0aGV0YTgsIHRoZXRhOSwgdGhldGExMCwgdGhldGExMSwgdGhldGExMiwgdGhldGExMylcbk0gPC0gbGVuZ3RoKHJlYWx0aGV0YSlcbksgPC0gc2FwcGx5KHJlYWx0aGV0YSwgbmNvbClcblxuWF9yYXcgPC0gbWF0cml4KHJub3JtKG4gKiAocCkpLCBucm93ID0gbilcblxuWCA8LSBzY2FsZShYX3JhdylcblxuI1hbLDJdIDwtIDAuNypYWywxXSArIHJub3JtKG4sMCwwLjEpXG5cbnJlYWxiZXRhIDwtIGMoMCwwLjcsMSwtMC44LDAuNSlcblxubXUgPC0gY2JpbmQoMSxYKSUqJXJlYWxiZXRhXG5cbmxvZ2l0X3Byb2IgPC0gZXhwKG11KS8oMStleHAobXUpKVxuXG5sb2dpdF9wcm9iIDwtIGNiaW5kKGxvZ2l0X3Byb2IsIDEtbG9naXRfcHJvYilcblxuY2xhc3MgPC0gYXBwbHkobG9naXRfcHJvYiwgMSwgZnVuY3Rpb24oeCkgc2FtcGxlKDE6RywgMSwgcHJvYiA9IHgpKVxuXG5ZIDwtIG1hdHJpeCgwLG5yb3cgPSBuLG5jb2wgPSBNKVxuXG5mb3IoaSBpbiAxOm4pe1xuICBmb3IgKGogaW4gMTpNKXtcbiAgICB0aGV0YV9tYXRfcm93IDwtIHJlYWx0aGV0YVtbal1dW2NsYXNzW2ldLF1cbiAgICBZW2ksal0gPC0gc2FtcGxlKDE6S1tqXSwgMSwgcHJvYiA9IHRoZXRhX21hdF9yb3cpXG4gIH1cbn1cblxuXG4jWCA8LSBYWywyOjZdXG5cblxuI3Rlc3RpbmcgdGhlIGVmZmVjdCB0aGF0IHRoZSBsYXN0IGNvdmFyaWF0ZSBoYXMgb24gdGhlIGxvZ2l0IHByb2JhYmlsaXRpZXNcbm11X2V4Y2wgPC0gY2JpbmQoMSxYKVssMjo0XSUqJXJlYWxiZXRhWzI6NF1cbmxvZ2l0X3Byb2JfZXhjbCA8LSBleHAobXVfZXhjbCkvKDErZXhwKG11X2V4Y2wpKVxubG9naXRfcHJvYl9leGNsIDwtIGNiaW5kKGxvZ2l0X3Byb2JfZXhjbCwgMS1sb2dpdF9wcm9iX2V4Y2wpXG5cblxuYGBgIn0= -->
+
+```r
+
+p <- 4
+G <- 2
+n <- 500
+
+#item probabilities 
+theta1 <- matrix(c(0.6,0.4,0.2,0.8), nrow = G, byrow = TRUE)
+theta2 <- matrix(c(0.8,0.2,0.5,0.5), nrow = G, byrow = TRUE)
+theta3 <- matrix(c(0.7,0.3,0.4,0.6), nrow = G, byrow = TRUE)
+theta4 <- matrix(c(0.6,0.4,0.9,0.1), nrow = G, byrow = TRUE)
+theta5 <- matrix(c(0.5,0.5,0.5,0.5), nrow = G, byrow = TRUE)
+theta6 <- matrix(c(0.4,0.6,0.4,0.6), nrow = G, byrow = TRUE)
+theta7 <- matrix(c(0.3,0.7,0.3,0.7), nrow = G, byrow = TRUE)
+theta8 <- matrix(c(0.2,0.8,0.2,0.8), nrow = G, byrow = TRUE)
+theta9 <- matrix(c(0.9,0.1,0.9,0.1), nrow = G, byrow = TRUE)
+theta10 <- matrix(c(0.6,0.4,0.6,0.4), nrow = G, byrow = TRUE)
+theta11 <- matrix(c(0.7,0.3,0.7,0.3), nrow = G, byrow = TRUE)
+theta12 <- matrix(c(0.8,0.2,0.8,0.2), nrow = G, byrow = TRUE)
+theta13 <- matrix(c(0.1,0.9,0.1,0.9), nrow = G, byrow = TRUE)
+
+realtheta <- list(theta1, theta2, theta3, theta4, theta5, theta6, theta7, theta8, theta9, theta10, theta11, theta12, theta13)
+M <- length(realtheta)
+K <- sapply(realtheta, ncol)
+
+X_raw <- matrix(rnorm(n * (p)), nrow = n)
+
+X <- scale(X_raw)
+
+#X[,2] <- 0.7*X[,1] + rnorm(n,0,0.1)
+
+realbeta <- c(0,0.7,1,-0.8,0.5)
+
+mu <- cbind(1,X)%*%realbeta
+
+logit_prob <- exp(mu)/(1+exp(mu))
+
+logit_prob <- cbind(logit_prob, 1-logit_prob)
+
+class <- apply(logit_prob, 1, function(x) sample(1:G, 1, prob = x))
+
+Y <- matrix(0,nrow = n,ncol = M)
+
+for(i in 1:n){
+  for (j in 1:M){
+    theta_mat_row <- realtheta[[j]][class[i],]
+    Y[i,j] <- sample(1:K[j], 1, prob = theta_mat_row)
+  }
+}
+
+
+#X <- X[,2:6]
+
+
+#testing the effect that the last covariate has on the logit probabilities
+mu_excl <- cbind(1,X)[,2:4]%*%realbeta[2:4]
+logit_prob_excl <- exp(mu_excl)/(1+exp(mu_excl))
+logit_prob_excl <- cbind(logit_prob_excl, 1-logit_prob_excl)
+
+
+```
+
+<!-- rnb-source-end -->
+"
+"0","```r
+
+p <- 4
+G <- 2
+n <- 500
+
+#item probabilities 
+theta1 <- matrix(c(0.6,0.4,0.2,0.8), nrow = G, byrow = TRUE)
+theta2 <- matrix(c(0.8,0.2,0.5,0.5), nrow = G, byrow = TRUE)
+theta3 <- matrix(c(0.7,0.3,0.4,0.6), nrow = G, byrow = TRUE)
+theta4 <- matrix(c(0.6,0.4,0.9,0.1), nrow = G, byrow = TRUE)
+theta5 <- matrix(c(0.5,0.5,0.5,0.5), nrow = G, byrow = TRUE)
+theta6 <- matrix(c(0.4,0.6,0.4,0.6), nrow = G, byrow = TRUE)
+theta7 <- matrix(c(0.3,0.7,0.3,0.7), nrow = G, byrow = TRUE)
+theta8 <- matrix(c(0.2,0.8,0.2,0.8), nrow = G, byrow = TRUE)
+theta9 <- matrix(c(0.9,0.1,0.9,0.1), nrow = G, byrow = TRUE)
+theta10 <- matrix(c(0.6,0.4,0.6,0.4), nrow = G, byrow = TRUE)
+theta11 <- matrix(c(0.7,0.3,0.7,0.3), nrow = G, byrow = TRUE)
+theta12 <- matrix(c(0.8,0.2,0.8,0.2), nrow = G, byrow = TRUE)
+theta13 <- matrix(c(0.1,0.9,0.1,0.9), nrow = G, byrow = TRUE)
+
+realtheta <- list(theta1, theta2, theta3, theta4, theta5, theta6, theta7, theta8, theta9, theta10, theta11, theta12, theta13)
+M <- length(realtheta)
+K <- sapply(realtheta, ncol)
+
+X_raw <- matrix(rnorm(n * (p)), nrow = n)
+
+X <- scale(X_raw)
+
+#X[,2] <- 0.7*X[,1] + rnorm(n,0,0.1)
+
+realbeta <- c(0,0.7,1,-0.8,0.5)
+
+mu <- cbind(1,X)%*%realbeta
+
+logit_prob <- exp(mu)/(1+exp(mu))
+
+logit_prob <- cbind(logit_prob, 1-logit_prob)
+
+class <- apply(logit_prob, 1, function(x) sample(1:G, 1, prob = x))
+
+Y <- matrix(0,nrow = n,ncol = M)
+
+for(i in 1:n){
+  for (j in 1:M){
+    theta_mat_row <- realtheta[[j]][class[i],]
+    Y[i,j] <- sample(1:K[j], 1, prob = theta_mat_row)
+  }
+}
+
+
+#X <- X[,2:6]
+
+
+#testing the effect that the last covariate has on the logit probabilities
+mu_excl <- cbind(1,X)[,2:4]%*%realbeta[2:4]
+logit_prob_excl <- exp(mu_excl)/(1+exp(mu_excl))
+logit_prob_excl <- cbind(logit_prob_excl, 1-logit_prob_excl)
+
+
+```"

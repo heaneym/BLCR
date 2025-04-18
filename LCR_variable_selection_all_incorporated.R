@@ -1217,15 +1217,30 @@ js_div_2 <- js_divergence(logit_prob,logit_prob_excl2)
 js_div_3 <- js_divergence(logit_prob,logit_prob_excl3)
 js_div_4 <- js_divergence(logit_prob,logit_prob_excl4)
 
+kl_div_1 <- kl_divergence(logit_prob,logit_prob_excl1)
+kl_div_2 <- kl_divergence(logit_prob,logit_prob_excl2)
+kl_div_3 <- kl_divergence(logit_prob,logit_prob_excl3)
+kl_div_4 <- kl_divergence(logit_prob,logit_prob_excl4)
+
 dens1 <- density(js_div_1)
 dens2 <- density(js_div_2)
 dens3 <- density(js_div_3)
 dens4 <- density(js_div_4)
 
+dens1_kl <- density(kl_div_1)
+dens2_kl <- density(kl_div_2)
+dens3_kl <- density(kl_div_3)
+dens4_kl <- density(kl_div_4)
+
 plot(dens1, col = "blue", lwd = 2, main = "JS Divergence Densities", xlab = "Value", ylim = c(0, max(dens1$y, dens2$y, dens3$y, dens4$y)))
 lines(dens2, col = "red", lwd = 2)
 lines(dens3, col = "green", lwd = 2)
 lines(dens4, col = "purple", lwd = 2)
+
+plot(dens1_kl, col = "blue", lwd = 2, main = "KL Divergence Densities", xlab = "Value", ylim = c(0, max(dens1_kl$y, dens2_kl$y, dens3_kl$y, dens4_kl$y)))
+lines(dens2_kl, col = "red", lwd = 2)
+lines(dens3_kl, col = "green", lwd = 2)
+lines(dens4_kl, col = "purple", lwd = 2)
 
 # LCR_fit2 <- LCR_Gibbs_cov_sel(X = X, Y = Y, G = 2, theta_prior_param = c(1,1), beta_prior_mean = beta_prior_mean, beta_prior_cov = beta_prior_cov, burnin = 1000, thinby = 10, n_samples = 5000, verbose = TRUE)
 # cov_incl_prop2 <- apply(LCR_fit2$gamma_samples, 1, mean)
@@ -1244,4 +1259,12 @@ js_divergence <- function(P, Q) {
   M <- 0.5 * (P + Q)
   0.5 * rowSums(P * log(P / M)) + 0.5 * rowSums(Q * log(Q / M))
 }
+
+kl_divergence <- function(P, Q) {
+  eps <- 1e-12
+  P <- pmax(P, eps)
+  Q <- pmax(Q, eps)
+  rowSums(P * log(P / Q))
+}
+
 

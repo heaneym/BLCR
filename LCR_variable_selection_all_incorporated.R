@@ -102,7 +102,7 @@ initialise_variables_polyagamma_varsel <- function(G,a = NULL, X,Y, beta_prior_m
   
   
 
-  
+  #print(K)
   Y_indicator <- 1*array(outer(Y, 1:max(K), "=="), dim = c(nrow(Y), ncol(Y), length(1:max(K))))
   
   return(list(Y = Y, Y_indicator = Y_indicator, X = X, X_current =X, theta = theta, alpha  = alpha, beta = beta, w = w, z = z, C = C, n = n, M = M,G = G, K = K, p = p, omega = omega,beta_cov = beta_cov, beta_cov_inv = beta_cov_inv, beta_cov_inv_chol = beta_cov_inv_chol, beta_prior_mean = beta_prior_mean, beta_prior_cov = beta_prior_cov ,beta_prior_cov_inv = beta_prior_cov_inv , gamma = gamma, beta_mean = beta_mean, eta = eta, logit_probs = logit_probs, tau = tau, mu = mu, A = A))
@@ -352,6 +352,31 @@ w_update_uncollapsed <- function(log_logit_probs,log_theta,Y,G,n,M,K){
   w <- exp(log_w)
   return(w)
 }
+
+
+#w_update_uncollapsed <- function(log_logit_probs, log_theta, Y, G, n, M, K) {
+  #log_theta_list <- lapply(1:M, function(j) {
+    #log_theta[, j, Y[, j]]
+  #})
+  #sum_log_theta <- Reduce(`+`, log_theta_list)
+  #log_w <- log_logit_probs + t(sum_log_theta)
+  
+  # Normalize to prevent underflow/overflow
+  #log_w_max <- apply(log_w, 2, max)
+  #log_w_norm <- sweep(log_w, 2, log_w_max)
+  #w <- exp(log_w_norm)
+  
+  # Normalize weights to sum to 1 for each column
+  #w <- sweep(w, 2, colSums(w), "/")
+  
+  #return(w)
+#}
+
+
+
+
+
+
 
 z_update_uncollapsed <- function(w){
   z <- t(apply(w, 1, function(row) rmultinom(1, 1, row)))

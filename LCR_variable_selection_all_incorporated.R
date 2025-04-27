@@ -402,16 +402,16 @@ nu_update <- function(nu, M, K, G, alpha, N_g, N_gjk, inclusion_sum, exclusion_s
   j_prop <- sample(1:M,1)
   if(nu[j_prop] == 1){
     nu_prop[j_prop] <- 0
-    log_gamma_N_alpha <- lgamma(N_gjk[,j_prop,] + alpha)
+    log_gamma_N_alpha <- lgamma(N_gjk[,j_prop,] + alpha[j_prop])
     log_sum1 <- sum(log_gamma_N_alpha)
-    diff_log <- sum(lgamma(N_g + K[j_prop]*alpha)) - log_sum1
+    diff_log <- sum(lgamma(N_g + K[j_prop]*alpha[j_prop])) - log_sum1
     log_accept_ratio <- exclusion_sum[j_prop] + diff_log
     #print(paste('exclusion', log_accept_ratio))
   } else {
     nu_prop[j_prop] <- 1
-    log_gamma_N_alpha <- lgamma(N_gjk[,j_prop,] + alpha)
+    log_gamma_N_alpha <- lgamma(N_gjk[,j_prop,] + alpha[j_prop])
     log_sum1 <- sum(log_gamma_N_alpha)
-    diff_log <- log_sum1 - sum(lgamma(N_g + K[j_prop]*alpha))
+    diff_log <- log_sum1 - sum(lgamma(N_g + K[j_prop]*alpha[j_prop]))
     log_accept_ratio <- inclusion_sum[j_prop] + diff_log
     #print(paste('inclusion', log_accept_ratio))
   }
@@ -421,7 +421,7 @@ nu_update <- function(nu, M, K, G, alpha, N_g, N_gjk, inclusion_sum, exclusion_s
     nu <- nu_prop
     #print('accepted')
   }
-  #print(accept_ratio)
+  #print(exclusion_sum)
   return(nu)
 }
 
@@ -436,76 +436,85 @@ z_update_collapsed <- function(z, nu, mu, K, alpha, N_gjk, N_g, Y_indicator, n, 
   K_current <- K[which_item_var]
   for (i in 1:n) {
     curr_z_i <- z[i,]  # Store current assignment
-    
+
     # Remove contribution of observation i from counts
     N_g_minus_i <- N_g - curr_z_i
-    
+
     for (g in 1:G) {
       # Calculate new counts if observation i is assigned to group g
       new_z_i <- rep(0, G)
       new_z_i[g] <- 1
-      
+
       # Update counts
       N_g_temp <- N_g_minus_i + new_z_i
-      
+
       N_gjk_temp <- N_gjk
-      for (j in which_item_var) {
-        for (k in 1:dim(Y_indicator)[3]) {
-          if (Y_indicator[i,j,k] == 1) {
-            for (h in 1:G) {
-              # Remove current assignment
-              N_gjk_temp[h,j,k] <- N_gjk_temp[h,j,k] - curr_z_i[h]
-              # Add new assignment
-              N_gjk_temp[h,j,k] <- N_gjk_temp[h,j,k] + (h == g)
-            }
-          }
-        }
-      }
       
       
-      log_gamma_N_gjk_temp <- lgamma(N_gjk_temp[,which_item_var,, drop=FALSE] + alpha)
+      N_gjk_mat      <- matrix(N_gjk, nrow = G)
+      N_gjk_mat_temp <- matrix(N_gjk_temp, nrow = G)
+      delta <- -curr_z_i + as.numeric(seq_len(G) == g)
+      mask_vec <- as.logical(Y_indicator[i, , ] == 1)
+      N_gjk_mat_temp[ , mask_vec] <- N_gjk_mat[ , mask_vec] + delta
+      dim(N_gjk_mat_temp) <- c(G,M,max(K))
+      N_gjk_temp <- N_gjk_mat_temp
+
+
+      log_gamma_N_gjk_temp <- lgamma(N_gjk_temp[,which_item_var,, drop=FALSE] + alpha[which_item_var])
       term2 <- sum(log_gamma_N_gjk_temp)
+
+      temp_mat <- outer(N_g_temp, K_current * alpha[which_item_var], "+")
+      term3 <- sum(lgamma(temp_mat))
       
-      term3 <- sum(sapply(1:G, function(h) {
-        sum(lgamma(N_g_temp[h] + K_current * alpha))
-      }))
-      
-      
-      
-      nonzero_indices <- which(gamma == 1)
-      
+      #term3 <- sum(sapply(1:G, function(h) {
+        #sum(lgamma(N_g_temp[h] + K_current * alpha[which_item_var]))
+      #}))
+
+
+
       term0 <- mu[i,g]
-      
-      
+
+
       w[i,g] <- term0 + term2 - term3
     }
-    
-    
+
+
     max_w_i <- max(w[i,])
     exp_w_i <- exp(w[i,] - max_w_i)
     w[i,] <- exp_w_i/sum(exp_w_i)
-    
-    
+
+
     z[i,] <- rmultinom(1, 1, w[i,])
-    
+
     # Update overall counts after this reassignment
     N_g <- N_g_minus_i + z[i,]
-    
+
     # Update N_gjk
-    for (j in 1:dim(Y_indicator)[2]) {
-      for (k in 1:dim(Y_indicator)[3]) {
-        if (Y_indicator[i,j,k] == 1) {
-          N_gjk[,j,k] <- N_gjk[,j,k] - curr_z_i + z[i,]
-        }
-      }
-    }
+    delta <- z[i, ] - curr_z_i
+    N_gjk_mat[ , mask_vec] <- N_gjk_mat[ , mask_vec] + delta
+    dim(N_gjk_mat) <- c(G,M,max(K))
+    N_gjk <- N_gjk_mat
   }
-  
+
   # Calculate final kappa
   kappa <- z - 0.5
-  
+
   return(list(z = z, w = w, kappa = kappa, N_g = N_g, N_gjk = N_gjk))
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ## Functions common to both collapsed and uncollapsed
@@ -972,8 +981,8 @@ LCR_Gibbs_cov_sel <- function(X, Y, G = 2, theta_prior_param = NULL, beta_prior_
 # needs to return stuff, and relabelling needs to be included somehow.
 
 
-LCR_Gibbs_item_sel <- function(X, Y, G = 2, theta_prior_param = 1, beta_prior_mean, beta_prior_cov, burnin = 500, n_samples = 1000, thinby = 1, verbose = FALSE, tau_prior_a = 1, tau_prior_b = 1){
-  init <- initialise_variables_BLCR_collapsed(G = G, X = X, Y = Y, beta_prior_mean = beta_prior_mean, beta_prior_cov = beta_prior_cov, clust_var_prior = theta_prior_param, alpha = theta_prior_param)
+LCR_Gibbs_item_sel <- function(X, Y, G = 2, theta_prior_param, beta_prior_mean, beta_prior_cov, burnin = 500, n_samples = 1000, thinby = 1, verbose = FALSE, tau_prior_a = 1, tau_prior_b = 1, clust_var_prior = 0.5){
+  init <- initialise_variables_BLCR_collapsed(G = G, X = X, Y = Y, beta_prior_mean = beta_prior_mean, beta_prior_cov = beta_prior_cov, clust_var_prior = clust_var_prior, alpha = theta_prior_param)
   list2env(init, envir = environment())
   n_iter <- thinby*n_samples + burnin
   beta_samples <- array(0, dim = c(dim(beta), n_samples))
@@ -1042,8 +1051,8 @@ LCR_Gibbs_item_sel <- function(X, Y, G = 2, theta_prior_param = 1, beta_prior_me
 
 
 #need to test the performance of the variable selection method as well.
-LCR_Gibbs_both_sel <- function(X, Y, G = 2, theta_prior_param = 1, beta_prior_mean, beta_prior_cov, burnin = 500, n_samples = 1000, thinby = 1, verbose = FALSE, tau_prior_a = 1, tau_prior_b = 1){
-  init <- initialise_variables_BLCR_collapsed(G = G, X = X, Y = Y, beta_prior_mean = beta_prior_mean, beta_prior_cov = beta_prior_cov, clust_var_prior = theta_prior_param, alpha = theta_prior_param)
+LCR_Gibbs_both_sel <- function(X, Y, G = 2, theta_prior_param, beta_prior_mean, beta_prior_cov, burnin = 500, n_samples = 1000, thinby = 1, verbose = FALSE, tau_prior_a = 1, tau_prior_b = 1, clust_var_prior = 0.5){
+  init <- initialise_variables_BLCR_collapsed(G = G, X = X, Y = Y, beta_prior_mean = beta_prior_mean, beta_prior_cov = beta_prior_cov, clust_var_prior = clust_var_prior, alpha = theta_prior_param)
   list2env(init, envir = environment())
   n_iter <- thinby*n_samples + burnin
   beta_samples <- array(0, dim = c(dim(beta), n_samples))
@@ -1108,6 +1117,7 @@ LCR_Gibbs_both_sel <- function(X, Y, G = 2, theta_prior_param = 1, beta_prior_me
     cat(sprintf("\nSampling complete! Total time: %.1f seconds (%.1f minutes)\n", 
                 total_time, total_time / 60))
   }
+  return(list(beta_samples = beta_samples, gamma_samples = gamma_samples, nu_samples = nu_samples, z_samples = z_samples, w_samples = w_samples, N_gjk_samples = N_gjk_samples, N_g_samples = N_g_samples))
 }
 
 
@@ -1201,13 +1211,14 @@ beta_prior_mean <- rep(0, p+1)
 beta_prior_cov <- diag(10^2, p+1)
 
 
-Y <- Y[,1:4]
+#Y <- Y[,1:4]
 
 #an iteresting thing is happening when I include a noise variable along with the other ones (in particular beta = (0, 0.7, 1, -0.8, 0.5) vs beta = (0, 0.7, 1, -0.8, 0.5, 0))
 #We get that the 2nd variable (corresponding to beta = 0.7) is excluded almost all of the time in the model where we have the extra noise covariate. Needs to be looked into further.
 
 
-LCR_fit1 <- LCR_Gibbs_cov_sel(X = X, Y = Y, G = 2, theta_prior_param = c(1,1), beta_prior_mean = beta_prior_mean, beta_prior_cov = beta_prior_cov, burnin = 2000, thinby = 10, n_samples = 10000, verbose = TRUE)
+#LCR_fit1 <- LCR_Gibbs_cov_sel(X = X, Y = Y, G = 2, theta_prior_param = c(1,1), beta_prior_mean = beta_prior_mean, beta_prior_cov = beta_prior_cov, burnin = 2000, thinby = 10, n_samples = 10000, verbose = TRUE)
+LCR_fit1 <- LCR_Gibbs_both_sel(X = X, Y = Y, G = 2, theta_prior_param = c(1,1), beta_prior_mean = beta_prior_mean, beta_prior_cov = beta_prior_cov, burnin = 2000, thinby = 10, n_samples = 5000, verbose = TRUE)
 cov_incl_prop1 <- apply(LCR_fit1$gamma_samples, 1, mean)
 cov_incl_prop1
 coincidence <- ((LCR_fit1$gamma_samples)%*%t(LCR_fit1$gamma_samples))/(dim(LCR_fit1$gamma_samples)[2])

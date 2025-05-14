@@ -7,7 +7,7 @@ library(einsum)
 
 # 1. Function for the sampler without the item selection
 
-initialise_variables_polyagamma_varsel <- function(G,a = NULL, X,Y, beta_prior_mean = NULL, beta_prior_cov = NULL){
+initialise_variables_polyagamma_varsel <- function(G,alpha, X,Y, beta_prior_mean = NULL, beta_prior_cov = NULL){
   if (is.vector(X)){
     ones <- rep(1,length(X))
     X <- cbind(ones,X)
@@ -25,18 +25,9 @@ initialise_variables_polyagamma_varsel <- function(G,a = NULL, X,Y, beta_prior_m
   #-----------------------------------------------------------------------------
   
   theta <- array(0, dim = c(G, M, max(K)))  #Initialising theta
-  if (is.null(a)){
-    alpha <- rep(1, max(K))
-  } else {
-    if(length(a) != max(K)){
-      print("The parameter a has the wrong length")
-    } else{
-      alpha <- a
-    }
-  }
   for (g in 1:G) { #generating a sample from theta_{gj vectors for each g and j}
     for (j in 1:M) {
-      theta[g, j, 1:K[j]] <- rdirichlet(1, alpha[1:K[j]])  
+      theta[g, j, 1:K[j]] <- rdirichlet(1, alpha)  
     }
   }
   
@@ -188,7 +179,7 @@ initialise_variables_BLCR_collapsed <- function(G, X, Y, beta_prior_cov = NULL, 
   Y_indicator <- 1*array(outer(Y, 1:max(K), "=="), dim = c(nrow(Y), ncol(Y), length(1:max(K))))
   N_jk <- colSums(Y_indicator, dims = 1)
   
-  
+  #need to sort out the alpha (theta hyperparameter) stufff
   sum1_inclusion <- (G-1)*(lgamma(K*alpha) - K*lgamma(alpha))
   log_gamma_N_jk_alpha <- lgamma(N_jk + alpha)
   sum2_inclusion <- lgamma(n + K*alpha) - rowSums(log_gamma_N_jk_alpha)
@@ -223,7 +214,7 @@ initialise_variables_BLCR_collapsed <- function(G, X, Y, beta_prior_cov = NULL, 
 # 3. Function for the regular sampler without variable selection
 
 
-initialise_variables_polyagamma <- function(G,a = NULL, X,Y, beta_prior_mean = NULL, beta_prior_cov = NULL){
+initialise_variables_polyagamma <- function(G,alpha, X,Y, beta_prior_mean = NULL, beta_prior_cov = NULL){
   if (is.vector(X)){
     ones <- rep(1,length(X))
     X1 <- cbind(ones,X)
@@ -241,18 +232,9 @@ initialise_variables_polyagamma <- function(G,a = NULL, X,Y, beta_prior_mean = N
   #-----------------------------------------------------------------------------
   
   theta <- array(0, dim = c(G, M, max(K)))  #Initialising theta
-  if (is.null(a)){
-    alpha <- rep(1, max(K))
-  } else {
-    if(length(a) != max(K)){
-      print("The parameter a has the wrong length")
-    } else{
-      alpha <- a
-    }
-  }
   for (g in 1:G) { #generating a sample from theta_{gj vectors for each g and j}
     for (j in 1:M) {
-      theta[g, j, 1:K[j]] <- rdirichlet(1, alpha[1:K[j]])  
+      theta[g, j, 1:K[j]] <- rdirichlet(1, alpha)  
     }
   }
   
@@ -343,44 +325,33 @@ theta_update <- function(S,alpha,K,G,M){
   return(theta)
 }
 
-w_update_uncollapsed <- function(log_logit_probs,log_theta,Y,G,n,M,K){
+# w_update_uncollapsed <- function(log_logit_probs,log_theta,Y,G,n,M,K){
+#   log_theta_list <- lapply(1:M, function(j) {
+#     log_theta[, j, Y[, j]]
+#   })
+#   sum_log_theta <- Reduce(`+`, log_theta_list)
+#   log_w <- log_logit_probs + t(sum_log_theta)
+#   w <- exp(log_w)
+#   return(w)
+# }
+# 
+# 
+# 
+# 
+# z_update_uncollapsed <- function(w){
+#   z <- t(apply(w, 1, function(row) rmultinom(1, 1, row)))
+#   return(z)
+# }
+
+z_update_uncollapsed <- function(log_logit_probs,log_theta,Y,G,n,M,K){
   log_theta_list <- lapply(1:M, function(j) {
     log_theta[, j, Y[, j]]
   })
   sum_log_theta <- Reduce(`+`, log_theta_list)
   log_w <- log_logit_probs + t(sum_log_theta)
   w <- exp(log_w)
-  return(w)
-}
-
-
-#w_update_uncollapsed <- function(log_logit_probs, log_theta, Y, G, n, M, K) {
-  #log_theta_list <- lapply(1:M, function(j) {
-    #log_theta[, j, Y[, j]]
-  #})
-  #sum_log_theta <- Reduce(`+`, log_theta_list)
-  #log_w <- log_logit_probs + t(sum_log_theta)
-  
-  # Normalize to prevent underflow/overflow
-  #log_w_max <- apply(log_w, 2, max)
-  #log_w_norm <- sweep(log_w, 2, log_w_max)
-  #w <- exp(log_w_norm)
-  
-  # Normalize weights to sum to 1 for each column
-  #w <- sweep(w, 2, colSums(w), "/")
-  
-  #return(w)
-#}
-
-
-
-
-
-
-
-z_update_uncollapsed <- function(w){
   z <- t(apply(w, 1, function(row) rmultinom(1, 1, row)))
-  return(z)
+  return(list(w = w, z = z))
 }
 
 
@@ -402,16 +373,16 @@ nu_update <- function(nu, M, K, G, alpha, N_g, N_gjk, inclusion_sum, exclusion_s
   j_prop <- sample(1:M,1)
   if(nu[j_prop] == 1){
     nu_prop[j_prop] <- 0
-    log_gamma_N_alpha <- lgamma(N_gjk[,j_prop,] + alpha[j_prop])
+    log_gamma_N_alpha <- lgamma(N_gjk[,j_prop,] + alpha)
     log_sum1 <- sum(log_gamma_N_alpha)
-    diff_log <- sum(lgamma(N_g + K[j_prop]*alpha[j_prop])) - log_sum1
+    diff_log <- sum(lgamma(N_g + K[j_prop]*alpha)) - log_sum1
     log_accept_ratio <- exclusion_sum[j_prop] + diff_log
     #print(paste('exclusion', log_accept_ratio))
   } else {
     nu_prop[j_prop] <- 1
-    log_gamma_N_alpha <- lgamma(N_gjk[,j_prop,] + alpha[j_prop])
+    log_gamma_N_alpha <- lgamma(N_gjk[,j_prop,] + alpha)
     log_sum1 <- sum(log_gamma_N_alpha)
-    diff_log <- log_sum1 - sum(lgamma(N_g + K[j_prop]*alpha[j_prop]))
+    diff_log <- log_sum1 - sum(lgamma(N_g + K[j_prop]*alpha))
     log_accept_ratio <- inclusion_sum[j_prop] + diff_log
     #print(paste('inclusion', log_accept_ratio))
   }
@@ -439,6 +410,8 @@ z_update_collapsed <- function(z, nu, mu, K, alpha, N_gjk, N_g, Y_indicator, n, 
 
     # Remove contribution of observation i from counts
     N_g_minus_i <- N_g - curr_z_i
+    
+    mask_vec <- as.logical(Y_indicator[i, , ] == 1)
 
     for (g in 1:G) {
       # Calculate new counts if observation i is assigned to group g
@@ -454,24 +427,17 @@ z_update_collapsed <- function(z, nu, mu, K, alpha, N_gjk, N_g, Y_indicator, n, 
       N_gjk_mat      <- matrix(N_gjk, nrow = G)
       N_gjk_mat_temp <- matrix(N_gjk_temp, nrow = G)
       delta <- -curr_z_i + as.numeric(seq_len(G) == g)
-      mask_vec <- as.logical(Y_indicator[i, , ] == 1)
       N_gjk_mat_temp[ , mask_vec] <- N_gjk_mat[ , mask_vec] + delta
       dim(N_gjk_mat_temp) <- c(G,M,max(K))
       N_gjk_temp <- N_gjk_mat_temp
 
 
-      log_gamma_N_gjk_temp <- lgamma(N_gjk_temp[,which_item_var,, drop=FALSE] + alpha[which_item_var])
+      log_gamma_N_gjk_temp <- lgamma(N_gjk_temp[,which_item_var,, drop=FALSE] + alpha)
       term2 <- sum(log_gamma_N_gjk_temp)
 
-      temp_mat <- outer(N_g_temp, K_current * alpha[which_item_var], "+")
+      temp_mat <- outer(N_g_temp, K_current * alpha, "+")
       term3 <- sum(lgamma(temp_mat))
       
-      #term3 <- sum(sapply(1:G, function(h) {
-        #sum(lgamma(N_g_temp[h] + K_current * alpha[which_item_var]))
-      #}))
-
-
-
       term0 <- mu[i,g]
 
 
@@ -808,9 +774,40 @@ LCR_log_post_compute <- function(mu, Y_indicator, log_theta, z, theta_prior_para
 }
 
 
-LCR_collapsed_log_post_compute <- function(){
-  
+
+
+
+
+
+LCR_collapsed_log_post_compute <- function(beta, beta_prior_cov_inv, beta_prior_mean, nu, mu, M, clust_var_prior, z, K, N_jk, N_gjk, N_g, n, theta_hyperparam){
+  beta_prior_term1 <- (-1/2)*sum(colSums(beta * (beta_prior_cov_inv %*% beta)))
+  beta_prior_term2 <- sum(crossprod(beta_prior_mean, beta_prior_cov_inv %*% beta))
+  beta_prior_term <- beta_prior_term1 + beta_prior_term2
+  current_indices <- which(nu == 1)
+  excl_indices <- which(nu == 0)
+  sum_current_indices <- sum(nu)
+  nu_prior_term <- sum_current_indices*log(clust_var_prior) + (M-sum_current_indices)*log(1-clust_var_prior)
+  logit_term <- sum(z*log_softmax(mu))
+  K_current <- K[current_indices]
+  K_excl <- K[excl_indices]
+  N_jk_excl <- N_jk[excl_indices,]
+  N_jk_current <- N_jk[current_indices,]
+  N_gjk_current <- N_gjk[,current_indices,]
+  term1 <- sum(lgamma(K_excl*theta_hyperparam))
+  term2 <- sum(K_excl*lgamma(theta_hyperparam))
+  term3 <- sum(lgamma(N_jk_excl + theta_hyperparam))
+  term4 <- sum(lgamma(n + K_excl*theta_hyperparam))
+  log_like_term1 <- term1 - term2 + term3 - term4
+  term5 <- G*sum(lgamma(K_current*theta_hyperparam))
+  term6 <- G*sum(K_current*lgamma(theta_hyperparam))
+  term7 <- sum(lgamma(N_gjk_current + theta_hyperparam))
+  term8 <- sum_current_indices*sum(lgamma(N_g+theta_hyperparam))
+  log_like_term2 <- term5 - term6 + term7 - term8
+  log_like <- log_like_term1 + log_like_term2
+  log_post <- log_like + beta_prior_term + nu_prior_term + logit_term
+  return(list(log_like = log_like, log_post = log_post))
 }
+
 
 
 
@@ -832,7 +829,7 @@ LCR_collapsed_log_post_compute <- function(){
 ## 1. LCR sampler using Polya-Gamma augmentation. Few bits to be added in this
 # needs to return stuff, and relabelling needs to be included somehow. 
 
-LCR_Gibbs <- function(X, Y, G = 2, theta_prior_param, beta_prior_mean, beta_prior_cov, burnin = 500, n_samples = 1000, thinby = 1, verbose = FALSE){
+LCR_Gibbs_no_sel <- function(X, Y, G = 2, theta_prior_param, beta_prior_mean, beta_prior_cov, burnin = 500, n_samples = 1000, thinby = 1, verbose = FALSE, relabel = TRUE){
   init <- initialise_variables_polyagamma(G = G, a = theta_prior_param, X = X, Y = Y, beta_prior_mean = beta_prior_mean, beta_prior_cov = beta_prior_cov)
   list2env(init, envir = environment())
   n_iter <- thinby*n_samples + burnin
@@ -856,8 +853,10 @@ LCR_Gibbs <- function(X, Y, G = 2, theta_prior_param, beta_prior_mean, beta_prio
     logit_probs <- logit_probs_update(eta = eta)
     log_logit_probs <- log(logit_probs)
     log_theta <- log(theta)
-    w <- w_update_uncollapsed(log_logit_probs = log_logit_probs,log_theta = log_theta, Y = Y, G = G, n = n, M = M, K = K)
-    z <- z_update_uncollapsed(w = w)
+    #w <- w_update_uncollapsed(log_logit_probs = log_logit_probs,log_theta = log_theta, Y = Y, G = G, n = n, M = M, K = K)
+    #z <- z_update_uncollapsed(w = w)
+    z_up <- z_update_uncollapsed(log_logit_probs = log_logit_probs, log_theta = log_theta, Y = Y, G = G, n = n, M = M, K = K)
+    list2env(z_up, envir = environment())
     kappa <- kappa_update(z = z)
     omega <- omega_update(eta = eta, mu = mu, G = G, n = n, omega = omega)
     A <- A_update(kappa = kappa, omega = omega, C = C, G = G)
@@ -895,7 +894,54 @@ LCR_Gibbs <- function(X, Y, G = 2, theta_prior_param, beta_prior_mean, beta_prio
     cat(sprintf("\nSampling complete! Total time: %.1f seconds (%.1f minutes)\n", 
                 total_time, total_time / 60))
   }
+  if (relabel){
+    print("relabelling")
+    z_mat <- matrix(0, nrow = n_samples, ncol = n)
+    for (iter in 1:n_samples){
+      temp <- z_samples[,,iter]
+      temp_row <- apply(temp,1,which.max)
+      z_mat[iter,] <- temp_row 
+    }
+    w_samples_reshape <- aperm(w_samples,c(3,1,2))
+    ls_perm <- ls$permutations$STEPHENS
+    reordered_beta_samples <- array(0, dim = dim(beta_samples))
+    reordered_z_samples <- array(0, dim = dim(z_samples))
+    reordered_w_samples <- array(0, dim = dim(w_samples))
+    reordered_theta_samples <- array(0, dim = dim(theta_samples))
+    for (i in 1:n_samples) {
+      reordered_beta_samples[,,i] <- beta_samples[,ls_perm[i,],i]
+      reordered_z_samples[,,i] <- z_samples[,ls_perm[i,],i]
+      reordered_w_samples[,,i] <- w_samples[,ls_perm[i,],i]
+      reordered_theta_samples[,,,i] <- theta_samples[ls_perm[i,], , ,i]
+    }
+    beta_samples <- reordered_beta_samples
+    z_samples <- reordered_z_samples
+    w_samples <- reordered_w_samples
+    theta_samples <- reordered_theta_samples
+  }
+  N_g_samples <- apply(z_samples, 3, colSums)
+  pi_samples <- N_g_samples/colSums(N_g_samples)
+  #Estimates for each parameter
+  beta_estimate <- apply(beta_samples, c(1,2), mean)
+  beta_sd <- apply(beta_samples, c(1,2), sd)
+  mu_estimate <-  mu_update(X = X, beta = beta_estimate)
+  #need to reformat the theta matrix into the list as before
+  theta_estimate <- apply(theta_samples, c(1,2,3), mean)
+  log_theta_estimate <- log(theta_estimate)
+  theta_sd <- apply(theta_samples, c(1,2,3), sd)
   
+  Z <- apply(z_samples, c(1,2), mean)
+  z_estimate <- apply(Z,1,which.max)
+  
+  log_post_estimate_compute <- LCR_log_post_compute(mu = mu_estimate, Y_indicator = Y_indicator, log_theta = log_theta_estimate, z = z_estimate, theta_prior_param = theta_prior_param, beta_prior_mean = beta_prior_mean, beta_prior_cov_inv = beta_prior_cov_inv, beta = beta_estimate)
+  log_post_estimate <- log_post_estimate_compute$log_post
+  log_like_estimate <- log_post_estimate_compute$log_like
+  deviance_estimated_params <- -2*log_like_estimate
+  deviance_samples <- -2*log_post_samples
+  mean_deviance <- mean(deviance_samples)
+  DIC <- 2*mean_deviance - deviance_estimated_params
+  samples <- list(logpost = log_post_samples, loglik = log_like_samples) #FINISH THIS OFF - need to reformat the item probabilities
+  return(list(beta_samples = beta_samples, theta_samples = theta_samples, z_samples = z_samples, w_samples = w_samples, pi_samples = pi_samples,log_post_samples = log_post_samples, log_like_samples = log_like_samples))
 }
 
 
@@ -904,7 +950,7 @@ LCR_Gibbs <- function(X, Y, G = 2, theta_prior_param, beta_prior_mean, beta_prio
 # needs to return stuff, and relabelling needs to be included somehow. 
 
 
-LCR_Gibbs_cov_sel <- function(X, Y, G = 2, theta_prior_param = NULL, beta_prior_mean, beta_prior_cov, burnin = 500, n_samples = 1000, thinby = 1, verbose = FALSE, tau_prior_a = 1, tau_prior_b = 1){
+LCR_Gibbs_cov_sel <- function(X, Y, G = 2, theta_prior_param = NULL, beta_prior_mean, beta_prior_cov, burnin = 500, n_samples = 1000, thinby = 1, verbose = FALSE, tau_prior_a = 1, tau_prior_b = 1, relabel = TRUE){
   init <- initialise_variables_polyagamma_varsel(G = G, a = theta_prior_param, X = X, Y = Y, beta_prior_mean = beta_prior_mean, beta_prior_cov = beta_prior_cov)
   list2env(init, envir = environment())
   n_iter <- thinby*n_samples + burnin
@@ -930,8 +976,10 @@ LCR_Gibbs_cov_sel <- function(X, Y, G = 2, theta_prior_param = NULL, beta_prior_
     logit_probs <- logit_probs_update(eta = eta)
     log_logit_probs <- log(logit_probs)
     log_theta <- log(theta)
-    w <- w_update_uncollapsed(log_logit_probs = log_logit_probs,log_theta = log_theta, Y = Y, G = G, n = n, M = M, K = K)
-    z <- z_update_uncollapsed(w = w)
+    #w <- w_update_uncollapsed(log_logit_probs = log_logit_probs,log_theta = log_theta, Y = Y, G = G, n = n, M = M, K = K)
+    #z <- z_update_uncollapsed(w = w)
+    z_up <- z_update_uncollapsed(log_logit_probs = log_logit_probs, log_theta = log_theta, Y = Y, G = G, n = n, M = M, K = K)
+    list2env(z_up, envir = environment())
     kappa <- kappa_update(z = z)
     omega <- omega_update(eta = eta, mu = mu, G = G, n = n, omega = omega)
     A <- A_update(kappa = kappa, omega = omega, C = C, G = G)
@@ -973,7 +1021,40 @@ LCR_Gibbs_cov_sel <- function(X, Y, G = 2, theta_prior_param = NULL, beta_prior_
     cat(sprintf("\nSampling complete! Total time: %.1f seconds (%.1f minutes)\n", 
                 total_time, total_time / 60))
   }
-  return(list(beta_samples = beta_samples, gamma_samples = gamma_samples, theta_samples = theta_samples, z_samples = z_samples, w_samples = w_samples, log_post_samples = log_post_samples, log_like_samples = log_like_samples))
+  if (relabel){
+    print("relabelling")
+    z_mat <- matrix(0, nrow = n_samples, ncol = n)
+    for (iter in 1:n_samples){
+      temp <- z_samples[,,iter]
+      temp_row <- apply(temp,1,which.max)
+      z_mat[iter,] <- temp_row 
+    }
+    w_samples_reshape <- aperm(w_samples,c(3,1,2))
+    ls <- label.switching(method = "STEPHENS", z = z_mat, K = G, p = w_samples_reshape)
+    ls_perm <- ls$permutations$STEPHENS
+    reordered_beta_samples <- array(0, dim = dim(beta_samples))
+    reordered_z_samples <- array(0, dim = dim(z_samples))
+    reordered_w_samples <- array(0, dim = dim(w_samples))
+    reordered_theta_samples <- array(0, dim = dim(theta_samples))
+    for (i in 1:n_samples) {
+      reordered_beta_samples[,,i] <- beta_samples[,ls_perm[i,],i]
+      reordered_z_samples[,,i] <- z_samples[,ls_perm[i,],i]
+      reordered_w_samples[,,i] <- w_samples[,ls_perm[i,],i]
+      reordered_theta_samples[,,,i] <- theta_samples[ls_perm[i,], , ,i]
+    }
+    beta_samples <- reordered_beta_samples
+    z_samples <- reordered_z_samples
+    w_samples <- reordered_w_samples
+    theta_samples <- reordered_theta_samples
+  }
+  N_g_samples <- apply(z_samples, 3, colSums)
+  pi_samples <- N_g_samples/colSums(N_g_samples)
+  deviance_samples <- -2*log_post_samples
+  mean_deviance <- mean(deviance_samples)
+  #need to calculate the mean of parameter values to use for the deviance calculation
+  
+  #DIC <- 
+  return(list(beta_samples = beta_samples, gamma_samples = gamma_samples, theta_samples = theta_samples, z_samples = z_samples, w_samples = w_samples, log_post_samples = log_post_samples, log_like_samples = log_like_samples, pi_samples = pi_samples))
 }
 
 
@@ -981,7 +1062,7 @@ LCR_Gibbs_cov_sel <- function(X, Y, G = 2, theta_prior_param = NULL, beta_prior_
 # needs to return stuff, and relabelling needs to be included somehow.
 
 
-LCR_Gibbs_item_sel <- function(X, Y, G = 2, theta_prior_param, beta_prior_mean, beta_prior_cov, burnin = 500, n_samples = 1000, thinby = 1, verbose = FALSE, tau_prior_a = 1, tau_prior_b = 1, clust_var_prior = 0.5){
+LCR_Gibbs_item_sel <- function(X, Y, G = 2, theta_prior_param, beta_prior_mean, beta_prior_cov, burnin = 500, n_samples = 1000, thinby = 1, verbose = FALSE, tau_prior_a = 1, tau_prior_b = 1, clust_var_prior = 0.5, relabel = TRUE){
   init <- initialise_variables_BLCR_collapsed(G = G, X = X, Y = Y, beta_prior_mean = beta_prior_mean, beta_prior_cov = beta_prior_cov, clust_var_prior = clust_var_prior, alpha = theta_prior_param)
   list2env(init, envir = environment())
   n_iter <- thinby*n_samples + burnin
@@ -992,6 +1073,8 @@ LCR_Gibbs_item_sel <- function(X, Y, G = 2, theta_prior_param, beta_prior_mean, 
   w_samples <- array(0, dim = c(dim(w), n_samples))
   N_g_samples <- array(0, dim = c(length(N_g), n_samples))
   N_gjk_samples <- array(0, dim = c(dim(N_gjk), n_samples))
+  log_post_samples <- numeric(n_samples)
+  log_like_samples <- numeric(n_samples)
   sample_count <- 0
   start_time <- Sys.time()
   progress_interval <- 500
@@ -1013,6 +1096,8 @@ LCR_Gibbs_item_sel <- function(X, Y, G = 2, theta_prior_param, beta_prior_mean, 
     A <- A_update(kappa = kappa, omega = omega, C = C, G = G)
     beta_up <- beta_update(gamma = gamma , X_current = X, G = G, p = p, beta_prior_cov_inv = beta_prior_cov_inv , A = A, beta_prior_mean = beta_prior_mean , omega = omega)
     list2env(beta_up, envir = environment())
+    log_post_compute <- LCR_collapsed_log_post_compute(beta = beta, beta_prior_cov_inv = beta_prior_cov_inv, beta_prior_mean = beta_prior_mean, nu = nu, mu = mu, M = M, clust_var_prior = clust_var_prior, z = z, K = K, N_jk = N_jk, N_gjk = N_gjk, N_g = N_g, n = n, theta_hyperparam = theta_prior_param)
+    list2env(log_post_compute, envir = environment())
     if (count > burnin && ((count - burnin) %% thinby == 0)) {
       sample_count <- sample_count + 1
       beta_samples[,,sample_count] <- beta
@@ -1022,6 +1107,8 @@ LCR_Gibbs_item_sel <- function(X, Y, G = 2, theta_prior_param, beta_prior_mean, 
       nu_samples[,sample_count] <- nu
       N_gjk_samples[,,,sample_count] <- N_gjk
       N_g_samples[,sample_count] <- N_g
+      log_post_samples[sample_count] <- log_post
+      log_like_samples[sample_count] <- log_like
     }
     
     if (verbose && count %% progress_interval == 0 && count > burnin) {
@@ -1043,6 +1130,41 @@ LCR_Gibbs_item_sel <- function(X, Y, G = 2, theta_prior_param, beta_prior_mean, 
     cat(sprintf("\nSampling complete! Total time: %.1f seconds (%.1f minutes)\n", 
                 total_time, total_time / 60))
   }
+  if (relabel){
+    print("relabelling")
+    z_mat <- matrix(0, nrow = n_samples, ncol = n)
+    for (iter in 1:n_samples){
+      temp <- z_samples[,,iter]
+      temp_row <- apply(temp,1,which.max)
+      z_mat[iter,] <- temp_row 
+    }
+    w_samples_reshape <- aperm(w_samples,c(3,1,2))
+    ls <- label.switching(method = "STEPHENS", z = z_mat, K = G, p = w_samples_reshape)
+    ls_perm <- ls$permutations$STEPHENS
+    reordered_beta_samples <- array(0, dim = dim(beta_samples))
+    reordered_z_samples <- array(0, dim = dim(z_samples))
+    reordered_w_samples <- array(0, dim = dim(w_samples))
+    reordered_N_gjk_samples <- array(0, dim = dim(N_gjk_samples))
+    reordered_N_g_samples <- array(0, dim = dim(N_g_samples))
+    for (i in 1:n_samples) {
+      reordered_beta_samples[,,i] <- beta_samples[,ls_perm[i,],i]
+      reordered_z_samples[,,i] <- z_samples[,ls_perm[i,],i]
+      reordered_w_samples[,,i] <- w_samples[,ls_perm[i,],i]
+      reordered_N_gjk_samples[,,,i] <- N_gjk_samples[ls_perm[i,],,,i]
+      reordered_N_g_samples[,i] <- N_g_samples[ls_perm[i,],i]
+    }
+    beta_samples <- reordered_beta_samples
+    z_samples <- reordered_z_samples
+    w_samples <- reordered_w_samples
+    N_gjk_samples <- reordered_N_gjk_samples
+    N_g_samples <- reordered_N_g_samples
+  }
+  pi_samples <- N_g_samples/colSums(N_g_samples)
+  deviance_samples <- -2*log_post_samples
+  mean_deviance <- mean(deviance_samples)
+  #need to calculate the mean of parameter values to use for the deviance calculation
+  
+  DIC <- 
 }
 
 
@@ -1051,7 +1173,7 @@ LCR_Gibbs_item_sel <- function(X, Y, G = 2, theta_prior_param, beta_prior_mean, 
 
 
 #need to test the performance of the variable selection method as well.
-LCR_Gibbs_both_sel <- function(X, Y, G = 2, theta_prior_param, beta_prior_mean, beta_prior_cov, burnin = 500, n_samples = 1000, thinby = 1, verbose = FALSE, tau_prior_a = 1, tau_prior_b = 1, clust_var_prior = 0.5){
+LCR_Gibbs_both_sel <- function(X, Y, G = 2, theta_prior_param, beta_prior_mean, beta_prior_cov, burnin = 500, n_samples = 1000, thinby = 1, verbose = FALSE, tau_prior_a = 1, tau_prior_b = 1, clust_var_prior = 0.5, relabel = TRUE){
   init <- initialise_variables_BLCR_collapsed(G = G, X = X, Y = Y, beta_prior_mean = beta_prior_mean, beta_prior_cov = beta_prior_cov, clust_var_prior = clust_var_prior, alpha = theta_prior_param)
   list2env(init, envir = environment())
   n_iter <- thinby*n_samples + burnin
@@ -1063,6 +1185,8 @@ LCR_Gibbs_both_sel <- function(X, Y, G = 2, theta_prior_param, beta_prior_mean, 
   N_g_samples <- array(0, dim = c(length(N_g), n_samples))
   N_gjk_samples <- array(0, dim = c(dim(N_gjk), n_samples))
   gamma_samples <- matrix(0, nrow = length(gamma), ncol = n_samples)
+  log_post_samples <- numeric(n_samples)
+  log_like_samples <- numeric(n_samples)
   sample_count <- 0
   start_time <- Sys.time()
   progress_interval <- 500
@@ -1086,6 +1210,8 @@ LCR_Gibbs_both_sel <- function(X, Y, G = 2, theta_prior_param, beta_prior_mean, 
     list2env(beta_up, envir = environment())
     gamma_up <- gamma_update(gamma = gamma, p = p, beta_prior_cov_inv = beta_prior_cov_inv, beta_prior_mean = beta_prior_mean, kappa = kappa, G = G, omega = omega, tau = tau, X = X, A = A, beta_mean = beta_mean, beta_cov_inv = beta_cov_inv)
     list2env(gamma_up, envir = environment())
+    log_post_compute <- LCR_collapsed_log_post_compute(beta = beta, beta_prior_cov_inv = beta_prior_cov_inv, beta_prior_mean = beta_prior_mean, nu = nu, mu = mu, M = M, clust_var_prior = clust_var_prior, z = z, K = K, N_jk = N_jk, N_gjk = N_gjk, N_g = N_g, n = n, theta_hyperparam = theta_prior_param)
+    list2env(log_post_compute, envir = environment())
     if (count > burnin && ((count - burnin) %% thinby == 0)) {
       sample_count <- sample_count + 1
       beta_samples[,,sample_count] <- beta
@@ -1096,6 +1222,8 @@ LCR_Gibbs_both_sel <- function(X, Y, G = 2, theta_prior_param, beta_prior_mean, 
       N_gjk_samples[,,,sample_count] <- N_gjk
       N_g_samples[,sample_count] <- N_g
       gamma_samples[,sample_count] <- gamma
+      log_post_samples[sample_count] <- log_post
+      log_like_samples[sample_count] <- log_like
     }
     
     if (verbose && count %% progress_interval == 0 && count > burnin) {
@@ -1117,7 +1245,42 @@ LCR_Gibbs_both_sel <- function(X, Y, G = 2, theta_prior_param, beta_prior_mean, 
     cat(sprintf("\nSampling complete! Total time: %.1f seconds (%.1f minutes)\n", 
                 total_time, total_time / 60))
   }
-  return(list(beta_samples = beta_samples, gamma_samples = gamma_samples, nu_samples = nu_samples, z_samples = z_samples, w_samples = w_samples, N_gjk_samples = N_gjk_samples, N_g_samples = N_g_samples))
+  if (relabel){
+    print("relabelling")
+    z_mat <- matrix(0, nrow = n_samples, ncol = n)
+    for (iter in 1:n_samples){
+      temp <- z_samples[,,iter]
+      temp_row <- apply(temp,1,which.max)
+      z_mat[iter,] <- temp_row 
+    }
+    w_samples_reshape <- aperm(w_samples,c(3,1,2))
+    ls <- label.switching(method = "STEPHENS", z = z_mat, K = G, p = w_samples_reshape)
+    ls_perm <- ls$permutations$STEPHENS
+    reordered_beta_samples <- array(0, dim = dim(beta_samples))
+    reordered_z_samples <- array(0, dim = dim(z_samples))
+    reordered_w_samples <- array(0, dim = dim(w_samples))
+    reordered_N_gjk_samples <- array(0, dim = dim(N_gjk_samples))
+    reordered_N_g_samples <- array(0, dim = dim(N_g_samples))
+    for (i in 1:n_samples) {
+      reordered_beta_samples[,,i] <- beta_samples[,ls_perm[i,],i]
+      reordered_z_samples[,,i] <- z_samples[,ls_perm[i,],i]
+      reordered_w_samples[,,i] <- w_samples[,ls_perm[i,],i]
+      reordered_N_gjk_samples[,,,i] <- N_gjk_samples[ls_perm[i,],,,i]
+      reordered_N_g_samples[,i] <- N_g_samples[ls_perm[i,],i]
+    }
+    beta_samples <- reordered_beta_samples
+    z_samples <- reordered_z_samples
+    w_samples <- reordered_w_samples
+    N_gjk_samples <- reordered_N_gjk_samples
+    N_g_samples <- reordered_N_g_samples
+  }
+  pi_samples <- N_g_samples/colSums(N_g_samples)
+  deviance_samples <- -2*log_post_samples
+  mean_deviance <- mean(deviance_samples)
+  #need to calculate the mean of parameter values to use for the deviance calculation
+  
+  DIC <- 
+  return(list(beta_samples = beta_samples, gamma_samples = gamma_samples, nu_samples = nu_samples, z_samples = z_samples, w_samples = w_samples, N_gjk_samples = N_gjk_samples, N_g_samples = N_g_samples, pi_samples = pi_samples))
 }
 
 
@@ -1302,5 +1465,40 @@ kl_divergence <- function(P, Q) {
   Q <- pmax(Q, eps)
   rowSums(P * log(P / Q))
 }
+
+
+
+
+
+
+
+
+LCR_Gibbs <- function(X,Y,G=2,predictor.sel = FALSE, item.sel = FALSE, theta_hyperparam, beta_prior_mean, beta_prior_cov, burnin = 500, n_samples = 1000, thinby = 1, verbose = FALSE, tau_prior_a = 1, tau_prior_b = 1, clust_hyperparam = 0.5){
+  args <- match.call()
+  if (predictor.sel){
+    if (item.sel){
+      outputs <- LCR_Gibbs_both_sel(X = X, Y = Y, G = G, theta_prior_param = theta_hyperparam, beta_prior_mean = beta_prior_mean, beta_prior_cov = beta_prior_cov, burnin = burnin, n_samples = n_samples, thinby = thinby, verbose = verbose, tau_prior_a = tau_prior_a, tau_prior_b = tau_prior_b, clust_var_prior = clust_hyperparam)
+    } else {
+      outputs <- LCR_Gibbs_cov_sel(X = X, Y = Y , G = G, theta_prior_param = theta_hyperparam, beta_prior_mean = beta_prior_mean, beta_prior_cov = beta_prior_cov, burnin = burnin, n_samples = n_samples, thinby = thinby, verbose = verbose, tau_prior_a = tau_prior_a, tau_prior_b = tau_prior_b)
+    }
+  } else {
+    if (item.sel){
+      outputs <- LCR_Gibbs_item_sel(X = X, Y = Y, G = G, theta_prior_param = theta_hyperparam, beta_prior_mean = beta_prior_mean, beta_prior_cov = beta_prior_cov, burnin = burnin, n_samples = n_samples, thinby = thinby, verbose = verbose, tau_prior_a = tau_prior_a, tau_prior_b = tau_prior_b, clust_var_prior = clust_hyperparam)
+    } else {
+      outputs <- LCR_Gibbs_no_sel(X = X, Y = Y, G = G, theta_prior_param = theta_hyperparam, beta_prior_mean = beta_prior_mean, beta_prior_cov = beta_prior_cov, burnin = burnin, n_samples = n_samples, thinby = thinby, verbose = verbose)
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
 
 

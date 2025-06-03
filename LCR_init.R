@@ -13,7 +13,7 @@ LCR_init <- function(X, Y, G, beta_prior_mean, beta_prior_cov, theta_hyperparam,
   theta <- array(0, dim = c(G, M, max(K)))  #Initialising theta
   for (g in 1:G) { #generating a sample from theta_{gj vectors for each g and j}
     for (j in 1:M) {
-        theta[g, j, ] <- rdirichlet(1,rep(theta_hyperparam,K[j]))
+        theta[g, j, 1:K[j]] <- rdirichlet(1,rep(theta_hyperparam,K[j]))
     }
   }
   beta <- cbind(matrix(rnorm((G-1)*(p+1)), nrow = (p+1)),0)

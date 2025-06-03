@@ -2,6 +2,7 @@ library(MCMCpack)
 library(BayesLogit)
 library(label.switching)
 library(einsum)
+library(Rcpp)
 #source z_update functions
 source("./LCR_z_update.R")
 #source init function

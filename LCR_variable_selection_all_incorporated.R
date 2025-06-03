@@ -1376,7 +1376,7 @@ beta_prior_cov <- diag(10^2, p+1)
 
 #Y <- Y[,1:4]
 
-#an iteresting thing is happening when I include a noise variable along with the other ones (in particular beta = (0, 0.7, 1, -0.8, 0.5) vs beta = (0, 0.7, 1, -0.8, 0.5, 0))
+#an interesting thing is happening when I include a noise variable along with the other ones (in particular beta = (0, 0.7, 1, -0.8, 0.5) vs beta = (0, 0.7, 1, -0.8, 0.5, 0))
 #We get that the 2nd variable (corresponding to beta = 0.7) is excluded almost all of the time in the model where we have the extra noise covariate. Needs to be looked into further.
 
 
@@ -1469,25 +1469,9 @@ kl_divergence <- function(P, Q) {
 
 
 
-
-
-
-
-LCR_Gibbs <- function(X,Y,G=2,predictor.sel = FALSE, item.sel = FALSE, theta_hyperparam, beta_prior_mean, beta_prior_cov, burnin = 500, n_samples = 1000, thinby = 1, verbose = FALSE, tau_prior_a = 1, tau_prior_b = 1, clust_hyperparam = 0.5){
+LCR_Gibbs <- function(X, Y, ){
   args <- match.call()
-  if (predictor.sel){
-    if (item.sel){
-      outputs <- LCR_Gibbs_both_sel(X = X, Y = Y, G = G, theta_prior_param = theta_hyperparam, beta_prior_mean = beta_prior_mean, beta_prior_cov = beta_prior_cov, burnin = burnin, n_samples = n_samples, thinby = thinby, verbose = verbose, tau_prior_a = tau_prior_a, tau_prior_b = tau_prior_b, clust_var_prior = clust_hyperparam)
-    } else {
-      outputs <- LCR_Gibbs_cov_sel(X = X, Y = Y , G = G, theta_prior_param = theta_hyperparam, beta_prior_mean = beta_prior_mean, beta_prior_cov = beta_prior_cov, burnin = burnin, n_samples = n_samples, thinby = thinby, verbose = verbose, tau_prior_a = tau_prior_a, tau_prior_b = tau_prior_b)
-    }
-  } else {
-    if (item.sel){
-      outputs <- LCR_Gibbs_item_sel(X = X, Y = Y, G = G, theta_prior_param = theta_hyperparam, beta_prior_mean = beta_prior_mean, beta_prior_cov = beta_prior_cov, burnin = burnin, n_samples = n_samples, thinby = thinby, verbose = verbose, tau_prior_a = tau_prior_a, tau_prior_b = tau_prior_b, clust_var_prior = clust_hyperparam)
-    } else {
-      outputs <- LCR_Gibbs_no_sel(X = X, Y = Y, G = G, theta_prior_param = theta_hyperparam, beta_prior_mean = beta_prior_mean, beta_prior_cov = beta_prior_cov, burnin = burnin, n_samples = n_samples, thinby = thinby, verbose = verbose)
-    }
-  }
+  init <- 
 }
 
 

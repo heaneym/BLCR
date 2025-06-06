@@ -33,9 +33,13 @@ LCR_init <- function(X, Y, G, beta_prior_mean, beta_prior_cov, theta_hyperparam,
     w[i,] <- rep(1/G,G)
   }
   z <- array(0, dim = c(n, G))
-  km <- kmeans(X, G)
-  for (i in 1:n) {
-    z[i, km$cluster[i]] <- 1
+  if (nrow(unique(X)) >= G){
+    km <- kmeans(X, G)
+    z_init_assign <- km$cluster
+    z[cbind(1:n, z_init_assign)] <- 1
+  } else {
+    z_init_assign <- sample(1:G, size = n, replace = TRUE)
+    z[cbind(1:n, z_init_assign)] <- 1
   }
   kappa <- z - 1/2
   gamma <- rep(1,p+1)

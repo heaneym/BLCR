@@ -1,4 +1,4 @@
-LCR_sim_data <- function(theta,beta,n_samples,n_noise_var){
+LCR_sim_data <- function(theta,beta,n_samples){
   #theta is a list of matrices (same as in poLCA) where #(list items) = #items, #rows = #classes, #cols = #(responses to that variable)
   #beta is a matrix of dimension (p+1)x(G-1)
   #n_samples is the number of samples we want to produce
@@ -6,14 +6,15 @@ LCR_sim_data <- function(theta,beta,n_samples,n_noise_var){
   G <- ncol(beta)+1
   M <- length(theta)
   K <- sapply(theta, ncol)
-  p <- nrow(beta)-1 + n_noise_var
+  p <- nrow(beta)-1 
   
   #First we produce the X matrix from N(0,1)
   X <- cbind(1,matrix(rnorm(n_samples*p),nrow = n_samples))
   Y <- matrix(0,nrow = n_samples,ncol = M)
+  beta_0 <- cbind(beta, 0)
   
   #Calculate the group membership probabilities and then decide class membership
-  mu <- cbind(X[,1:nrow(beta)]%*%beta,0)
+  mu <- X%*%beta_0
   exp_mu <- exp(mu)
   gamma <- exp_mu/rowSums(exp_mu)
   class_vec <- apply(gamma, 1, function(x) sample(1:G, 1, prob = x))

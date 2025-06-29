@@ -3,7 +3,7 @@ using namespace Rcpp;
 
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
-List z_update_uncollapsed_cpp(arma::mat log_logit_probs, arma::cube log_theta, arma::umat Y, int G, int n, int M, IntegerVector K) {
+List z_update_uncollapsed(arma::mat log_logit_probs, arma::cube log_theta, arma::umat Y, int G, int n, int M, IntegerVector K) {
   
   arma::mat sum_log_theta(G, n, arma::fill::zeros);
   

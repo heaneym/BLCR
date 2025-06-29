@@ -71,7 +71,7 @@ LCR_Gibbs <- function(X, Y, G,
       beta = beta, nu = nu, M = M, 
       clust_var_prior = clust_var_prior,
       K = K, N_jk = N_jk, N_gjk = N_gjk, 
-      N_g = N_g, n = n
+      N_g = N_g, n = n, G = G
     )
     log_post_like <- log_post_compute(log_post_params)
     list2env(log_post_like, envir = environment())
@@ -137,7 +137,8 @@ LCR_Gibbs <- function(X, Y, G,
                                    item.sel = item.sel,
                                    n_samples = n_samples,
                                    N_gjk_samples = N_gjk_samples,
-                                   theta_hyperparam = theta_hyperparam)
+                                   theta_hyperparam = theta_hyperparam,
+                                   clust_var_prior = clust_var_prior)
   list2env(post_process, envir = environment())
   samples <- list(beta_samples = beta_samples, 
                   omega_samples = omega_samples,

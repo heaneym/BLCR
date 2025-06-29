@@ -1,4 +1,4 @@
-LCR_log_post_compute <- function(mu, Y_indicator, log_theta, z, theta_hyperparam, beta_prior_mean, beta_prior_cov_inv, beta){
+LCR_log_post_compute <- function(mu, Y_indicator, log_theta, z, theta_hyperparam, beta_prior_mean, beta_prior_cov_inv, beta, G){
   term1_mat <- log_softmax(mu)
   term2_array <- einsum("ijk,gjk -> igj", Y_indicator, log_theta)
   term2_mat <- apply(term2_array, c(1, 2), sum)
@@ -16,7 +16,7 @@ LCR_log_post_compute <- function(mu, Y_indicator, log_theta, z, theta_hyperparam
 }
 
 
-LCR_collapsed_log_post_compute <- function(beta, beta_prior_cov_inv, beta_prior_mean, nu, mu, M, clust_var_prior, z, K, N_jk, N_gjk, N_g, n, theta_hyperparam){
+LCR_collapsed_log_post_compute <- function(beta, beta_prior_cov_inv, beta_prior_mean, nu, mu, M, clust_var_prior, z, K, N_jk, N_gjk, N_g, n, theta_hyperparam, G){
   beta_prior_term1 <- (-1/2)*sum(colSums(beta * (beta_prior_cov_inv %*% beta)))
   beta_prior_term2 <- sum(crossprod(beta_prior_mean, beta_prior_cov_inv %*% beta))
   beta_prior_term <- beta_prior_term1 + beta_prior_term2
@@ -49,11 +49,11 @@ LCR_collapsed_log_post_compute <- function(beta, beta_prior_cov_inv, beta_prior_
 get_log_post_function <- function(item.sel) {
   if (item.sel) {
     return(function(params) {
-      with(params, LCR_collapsed_log_post_compute(beta, beta_prior_cov_inv, beta_prior_mean, nu, mu, M, clust_var_prior, z, K, N_jk, N_gjk, N_g, n, theta_hyperparam))
+      with(params, LCR_collapsed_log_post_compute(beta, beta_prior_cov_inv, beta_prior_mean, nu, mu, M, clust_var_prior, z, K, N_jk, N_gjk, N_g, n, theta_hyperparam, G))
     })
   } else {
     return(function(params) {
-      with(params, LCR_log_post_compute(mu, Y_indicator, log_theta, z, theta_hyperparam, beta_prior_mean, beta_prior_cov_inv, beta))
+      with(params, LCR_log_post_compute(mu, Y_indicator, log_theta, z, theta_hyperparam, beta_prior_mean, beta_prior_cov_inv, beta, G))
     })
   }
 }

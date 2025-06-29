@@ -5,7 +5,7 @@ LCR_post_process <- function(N_g_samples, z_samples, beta_samples,
                              M, K, n, log_like_samples, 
                              p, G, log_post_compute, item.sel, 
                              n_samples, N_gjk_samples, 
-                             theta_hyperparam){
+                             theta_hyperparam, clust_var_prior){
   
   if(item.sel){
     theta_estimate <- array(0, dim = c(G, M, max(K)))
@@ -63,7 +63,7 @@ LCR_post_process <- function(N_g_samples, z_samples, beta_samples,
     beta = beta_estimate, nu = nu_estimate_hard, M = M, 
     clust_var_prior = clust_var_prior,
     K = K, N_jk = N_jk, N_gjk = N_gjk_estimate, 
-    N_g = N_g_estimate, n = n
+    N_g = N_g_estimate, n = n, G = G
   )
   
   log_post_like_estimate <- log_post_compute(log_post_params_estimate) 
@@ -94,26 +94,51 @@ LCR_post_process <- function(N_g_samples, z_samples, beta_samples,
     }
   }
   
+  #Going to permute the indices so that g indices are sorted by the group proportions
+  descend_perm <- order(pi_estimate, decreasing = TRUE)
+  pi_samples_perm <- pi_samples[descend_perm, , drop = FALSE]
+  pi_estimate_perm <- pi_estimate[descend_perm]
+  pi_sd_perm <- pi_sd[descend_perm]
+  Z_perm <- Z[,descend_perm]
+  z_sd_perm <- z_sd[,descend_perm]
+  z_estimate_perm <- z_estimate[,descend_perm]
+  beta_estimate_perm <- beta_estimate[,descend_perm]
+  beta_sd_perm <- beta_sd[,descend_perm]
+  theta_list_perm <- lapply(theta_list, function(mat) mat[descend_perm, , drop = FALSE])
+  theta_row_names <- paste0("Group ", seq_len(G))
+  theta_list_named <- lapply(theta_list_perm, function(mat) {
+    rownames(mat) <- theta_row_names
+    mat
+  })
+  theta_sd_list_perm <- lapply(theta_sd_list, function(mat) mat[descend_perm, , drop = FALSE])
+  theta_sd_list_named <- lapply(theta_sd_list_perm, function(mat) {
+    rownames(mat) <- theta_row_names
+    mat
+  })
+  N_gjk_estimate_perm <- N_gjk_estimate[descend_perm,,]
+  N_g_estimate_perm <- N_g_estimate[descend_perm]
+  
+  
   outputs <- list(
-    pi_samples = pi_samples,
-    pi_estimate = pi_estimate,
-    pi_sd = pi_sd,
-    Z = Z,
-    z_sd = z_sd,
-    z_estimate = z_estimate,
+    pi_samples = pi_samples_perm,
+    pi_estimate = pi_estimate_perm,
+    pi_sd = pi_sd_perm,
+    Z = Z_perm,
+    z_sd = z_sd_perm,
+    z_estimate = z_estimate_perm,
     z_entropy = z_entropy,
-    beta_estimate = beta_estimate,
-    beta_sd = beta_sd,
-    theta_estimate = theta_list,
-    theta_sd = theta_sd_list,
+    beta_estimate = beta_estimate_perm,
+    beta_sd = beta_sd_perm,
+    theta_estimate = theta_list_named,
+    theta_sd = theta_sd_list_named,
     nu_estimate = nu_estimate,
     item_ind = nu_estimate_hard,
     nu_sd = nu_sd,
     gamma_estimate = gamma_estimate,
     gamma_sd = gamma_sd,
     cov_ind = gamma_estimate_hard,
-    N_gjk_estimate = N_gjk_estimate,
-    N_g_estimate = N_g_estimate,
+    N_gjk_estimate = N_gjk_estimate_perm,
+    N_g_estimate = N_g_estimate_perm,
     log_post = log_post_estimate,
     log_like = log_like_estimate,
     AIC = AIC,
@@ -121,7 +146,6 @@ LCR_post_process <- function(N_g_samples, z_samples, beta_samples,
     DIC = DIC
   )
   return(outputs)
-  #I want to reformat the variables as well for things like beta, theta,etc. This can be done later on though
 }
 
 

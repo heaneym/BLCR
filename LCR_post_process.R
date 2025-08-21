@@ -8,12 +8,18 @@ LCR_post_process <- function(N_g_samples, z_samples, beta_samples,
                              theta_hyperparam, clust_var_prior){
   
   if(item.sel){
+    theta_estimate_samples <- array(0, dim = c(G,M,max(K),n_samples))
     theta_estimate <- array(0, dim = c(G, M, max(K)))
     theta_var <- array(0, dim = c(G, M, max(K)))
     for (g in 1:G){
       for (j in 1:M){
         for (k in 1:K[j]){
-          theta_estimate[g,j,k] <- (1/n_samples)*(sum((N_gjk_samples[g,j,k,] + theta_hyperparam)/(N_g_samples[g,] + K[j]*theta_hyperparam)))
+          for (t in 1:n_samples){
+            denom_sum <- K[j]*theta_hyperparam + sum(N_gjk_samples[g,j,1:K[j],t])
+            theta_estimate_samples[g,j,k,t] <- (N_gjk_samples[g,j,k,t] + theta_hyperparam)/(denom_sum)
+          }
+          theta_estimate <- apply(theta_estimate_samples, c(1,2,3), mean)
+          #theta_estimate[g,j,k] <- (1/n_samples)*(sum((N_gjk_samples[g,j,k,] + theta_hyperparam)/(N_g_samples[g,] + K[j]*theta_hyperparam)))
           var_term1_summand_num <- (N_gjk_samples[g,j,k,] + theta_hyperparam)*(N_g_samples[g,] + (K[j] - 1)*theta_hyperparam - N_gjk_samples[g,j,k,])
           var_term1_summand_denom <- ((N_g_samples[g,] + K[j]*theta_hyperparam)^2)*(N_g_samples[g,] + K[j]*theta_hyperparam + 1)
           var_term1 <- (1/n_samples)*sum(var_term1_summand_num/var_term1_summand_denom)
@@ -23,7 +29,6 @@ LCR_post_process <- function(N_g_samples, z_samples, beta_samples,
       }
     }
     theta_sd <- sqrt(theta_var)
-    #finish this!!!
   } else {
     theta_estimate <- apply(theta_samples, c(1,2,3), mean)
     theta_sd <- apply(theta_samples, c(1,2,3), sd)
@@ -47,12 +52,11 @@ LCR_post_process <- function(N_g_samples, z_samples, beta_samples,
   gamma_estimate <- apply(gamma_samples, 1, mean)
   gamma_estimate_hard <- as.integer(gamma_estimate>0.5)
   gamma_sd <- apply(gamma_samples, 1, sd)
-  N_up_estimate <- N_updates(z = z_estimate, Y_indicator = Y_indicator, N_jk = N_jk, nu = nu_estimate_hard)
-  N_gjk_estimate <- N_up_estimate$N_gjk
-  N_g_estimate <- N_up_estimate$N_g
-  mu_estimate <- X%*%beta_estimate
+  mu_estimate <- X %*% beta_estimate
+  N_up_estimate_temp <- N_updates(z = z_estimate, Y_indicator = Y_indicator, N_jk = N_jk, nu = nu_estimate_hard)
+  N_gjk_estimate <- N_up_estimate_temp$N_gjk
+  N_g_estimate <- N_up_estimate_temp$N_g
   
-  #do I need to include the log like/log post function as an argument?
   
   log_post_params_estimate <- list(
     mu = mu_estimate, Y_indicator = Y_indicator, 
@@ -80,7 +84,6 @@ LCR_post_process <- function(N_g_samples, z_samples, beta_samples,
   deviance_estimate <- -2*log_like_estimate
   DIC <- 2*mean_deviance - deviance_estimate
   
-  
   theta_list <- list()
   theta_sd_list <- list()
   for (j in 1:M){
@@ -94,7 +97,7 @@ LCR_post_process <- function(N_g_samples, z_samples, beta_samples,
     }
   }
   
-  #Going to permute the indices so that g indices are sorted by the group proportions
+  # --- Permute into decreasing order of group proportions ---
   descend_perm <- order(pi_estimate, decreasing = TRUE)
   pi_samples_perm <- pi_samples[descend_perm, , drop = FALSE]
   pi_estimate_perm <- pi_estimate[descend_perm]
@@ -104,23 +107,29 @@ LCR_post_process <- function(N_g_samples, z_samples, beta_samples,
   z_estimate_perm <- z_estimate[,descend_perm]
   beta_estimate_perm <- beta_estimate[,descend_perm]
   beta_sd_perm <- beta_sd[,descend_perm]
+  beta_samples_perm <- beta_samples[,descend_perm,]
   theta_list_perm <- lapply(theta_list, function(mat) mat[descend_perm, , drop = FALSE])
   theta_row_names <- paste0("Group ", seq_len(G))
   theta_list_named <- lapply(theta_list_perm, function(mat) {
     rownames(mat) <- theta_row_names
     mat
   })
-  theta_sd_list_perm <- lapply(theta_sd_list, function(mat) mat[descend_perm, , drop = FALSE])
-  theta_sd_list_named <- lapply(theta_sd_list_perm, function(mat) {
-    rownames(mat) <- theta_row_names
-    mat
-  })
-  N_gjk_estimate_perm <- N_gjk_estimate[descend_perm,,]
-  N_g_estimate_perm <- N_g_estimate[descend_perm]
+   theta_sd_list_perm <- lapply(theta_sd_list, function(mat) mat[descend_perm, , drop = FALSE])
+   theta_sd_list_named <- lapply(theta_sd_list_perm, function(mat) {
+     rownames(mat) <- theta_row_names
+     mat
+   })
+   
+   N_up_estimate <- N_updates(z = z_estimate_perm, Y_indicator = Y_indicator, N_jk = N_jk, nu = nu_estimate_hard)
+   N_gjk_estimate_perm <- N_up_estimate$N_gjk
+   N_g_estimate_perm <- N_up_estimate$N_g
   
+  names(theta_list_named) <- colnames(Y)
+  names(theta_sd_list_named) <- colnames(Y)
   
   outputs <- list(
     pi_samples = pi_samples_perm,
+    beta_samples = beta_samples_perm,
     pi_estimate = pi_estimate_perm,
     pi_sd = pi_sd_perm,
     Z = Z_perm,
@@ -137,8 +146,8 @@ LCR_post_process <- function(N_g_samples, z_samples, beta_samples,
     gamma_estimate = gamma_estimate,
     gamma_sd = gamma_sd,
     cov_ind = gamma_estimate_hard,
-    N_gjk_estimate = N_gjk_estimate_perm,
-    N_g_estimate = N_g_estimate_perm,
+    N_gjk_estimate = N_gjk_estimate,
+    N_g_estimate = N_g_estimate,
     log_post = log_post_estimate,
     log_like = log_like_estimate,
     AIC = AIC,
@@ -147,7 +156,6 @@ LCR_post_process <- function(N_g_samples, z_samples, beta_samples,
   )
   return(outputs)
 }
-
 
 
 

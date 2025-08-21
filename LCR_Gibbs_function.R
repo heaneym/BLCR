@@ -6,6 +6,12 @@ LCR_Gibbs <- function(X, Y, G,
                       n_samples = 1000, burnin = 500, 
                       thinby = 1){
   args <- match.call()
+  if (is.data.frame(X)) {
+    X <- as.matrix(X)
+  }
+  if (is.data.frame(Y)) {
+    Y <- as.matrix(Y)
+  }
   init <- LCR_init(X = X, Y = Y, G = G, 
                    beta_prior_mean = beta_prior_mean,
                    beta_prior_cov = beta_prior_cov,
@@ -116,8 +122,6 @@ LCR_Gibbs <- function(X, Y, G,
     list2env(relabelled_samples, envir = environment())
   }
   
-  
-  #need to do post processing steps here!!!
   
   post_process <- LCR_post_process(N_g_samples = N_g_samples,
                                    z_samples = z_samples,

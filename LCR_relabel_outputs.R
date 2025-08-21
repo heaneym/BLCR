@@ -36,10 +36,10 @@ relabel_outputs <- function(beta_samples, z_samples, w_samples, theta_samples,
     baseline <- reordered_beta_samples[ , G, i]
     reordered_beta_samples[ , , i] <- reordered_beta_samples[ , , i] - baseline
     reordered_z_samples[ , , i]     <- z_samples[ , ls_perm[i, ], i]
-    reordered_w_samples[ , ls_perm[i, ], i] <- w_samples[ , ls_perm[i, ], i]
-    reordered_theta_samples[ls_perm[i, ], , , i]  <- theta_samples[ls_perm[i, ], , , i]
-    reordered_N_gjk_samples[ls_perm[i, ], , , i]  <- N_gjk_samples[ls_perm[i, ], , , i]
-    reordered_N_g_samples[ls_perm[i, ], i]        <- N_g_samples[ls_perm[i, ], i]
+    reordered_w_samples[ , , i] <- w_samples[ , ls_perm[i, ], i]
+    reordered_theta_samples[, , , i]  <- theta_samples[ls_perm[i, ], , , i]
+    reordered_N_gjk_samples[, , , i]  <- N_gjk_samples[ls_perm[i, ], , , i]
+    reordered_N_g_samples[, i]        <- N_g_samples[ls_perm[i, ], i]
   }
   reordered_samples <- list(
     beta_samples   = reordered_beta_samples,

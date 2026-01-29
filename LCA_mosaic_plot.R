@@ -15,8 +15,6 @@ plot_mosaic_gg_LCA <- function(
   xmax <- cumsum(classprob)
   xmin <- c(0, head(xmax, -1))
   mosaic_plot_list <- list()
-  
-  # Default group labels: A, B, C, ...
   if (is.null(group_labels)) {
     group_labels <- LETTERS[1:G]
   }
@@ -24,7 +22,6 @@ plot_mosaic_gg_LCA <- function(
     stop("Length of group_labels must match number of groups (G).")
   }
   
-  # Colorblind-friendly palette
   cb_palette <- c(
     "Response 1" = "#0072B2",
     "Response 2" = "#E69F00",

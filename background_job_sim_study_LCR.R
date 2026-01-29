@@ -19,6 +19,8 @@ source('LCR_Gibbs.R')
 #                                               thinby = 10)
 
 
+
+
 sim_coefficient_test_cov_sel_LCR_small <- LCR_Gibbs(X = sim_X_small, 
                                                     Y = sim_Y_small, 
                                                     G = 4,

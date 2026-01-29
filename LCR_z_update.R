@@ -89,19 +89,50 @@ sourceCpp("z_update_uncollapsed.cpp")
 
 
 
+# get_z_update_function <- function(item.sel) {
+#   if (item.sel) {
+#     return(function(params) {
+#       with(params, z_update_collapsed(z, nu, mu, K, theta_hyperparam, N_gjk, N_g,
+#                                       Y_indicator, Y_missing_indicator, n, G, M, omega, C, p,
+#                                       beta, beta_cov_inv, beta_cov_inv_chol,
+#                                       beta_prior_mean, beta_prior_cov_inv,
+#                                       gamma, X_current))
+#     })
+#   } else {
+#     return(function(params) {
+#       with(params, z_update_uncollapsed(log_logit_probs, log_theta, Y, 
+#                                         Y_missing_indicator, G, n, M, K))
+#     })
+#   }
+# }
+
+
 get_z_update_function <- function(item.sel) {
   if (item.sel) {
     return(function(params) {
-      with(params, z_update_collapsed(z, nu, mu, K, theta_hyperparam, N_gjk, N_g,
-                                      Y_indicator, n, G, M,  omega, C, p,
-                                      beta, beta_cov_inv, beta_cov_inv_chol,
-                                      beta_prior_mean, beta_prior_cov_inv,
-                                      gamma, X_current))
+      with(params, z_update_collapsed(
+        z, nu, mu, K, theta_hyperparam, 
+        as.vector(N_gjk),           # Ensure vector
+        N_g,
+        as.vector(Y_indicator),     # Ensure vector
+        Y_missing_indicator,        # This is a matrix (correct)
+        n, G, M, omega, C, p,
+        beta, beta_cov_inv, beta_cov_inv_chol,
+        beta_prior_mean, beta_prior_cov_inv,
+        gamma, X_current))
     })
   } else {
     return(function(params) {
-      with(params, z_update_uncollapsed(log_logit_probs, log_theta, Y, G, n, M, K))
+      with(params, z_update_uncollapsed(log_logit_probs, log_theta, Y, 
+                                        Y_missing_indicator, G, n, M, K))
     })
   }
 }
+
+
+
+
+
+
+
 

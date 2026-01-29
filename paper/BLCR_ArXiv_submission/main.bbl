@@ -1,0 +1,228 @@
+\begin{thebibliography}{}
+
+\bibitem[Antczak et~al., 2020]{antczak_physical_2020}
+Antczak, D., Lonsdale, C., Lee, J., Hilland, T., Duncan, M.~J., del Pozo~Cruz, B., Hulteen, R.~M., Parker, P.~D., and Sanders, T. (2020).
+\newblock Physical activity and sleep are inconsistently related in healthy children: {A} systematic review and meta-analysis.
+\newblock {\em Sleep Medicine Reviews}, 51:101278.
+\newblock DOI: \href{https://doi.org/10.1016/j.smrv.2020.101278}{10.1016/j.smrv.2020.101278}.
+
+\bibitem[Bandeen-Roche et~al., 1997]{bandeen-roche_latent_1997}
+Bandeen-Roche, K., Miglioretti, D.~L., Zeger, S.~L., and Rathouz, P.~J. (1997).
+\newblock Latent {Variable} {Regression} for {Multiple} {Discrete} {Outcomes}.
+\newblock {\em Journal of the American Statistical Association}, 92(440):1375--1386.
+\newblock DOI: \href{https://doi.org/10.2307/2965407}{10.2307/2965407}.
+
+\bibitem[Bolck et~al., 2004]{bolck_estimating_2004}
+Bolck, A., Croon, M., and Hagenaars, J. (2004).
+\newblock Estimating {Latent} {Structure} {Models} with {Categorical} {Variables}: {One}-{Step} {Versus} {Three}-{Step} {Estimators}.
+\newblock {\em Political Analysis}, 12(1):3--27.
+\newblock DOI: \href{https://doi.org/10.1093/pan/mph001}{10.1093/pan/mph001}.
+
+\bibitem[Celeux et~al., 2000]{celeux_computational_2000}
+Celeux, G., Hurn, M., and Robert, C. (2000).
+\newblock Computational and {Inferential} {Difficulties} with {Mixture} {Posterior} {Distributions}.
+\newblock {\em Journal of the American Statistical Association}, 95(451):957--970.
+\newblock DOI: \href{https://doi.org/10.1080/01621459.2000.10474285}{10.1080/01621459.2000.10474285}.
+
+\bibitem[Chaput et~al., 2018]{chaput_sleeping_2018}
+Chaput, J.-P., Dutil, C., and Sampasa-Kanyinga, H. (2018).
+\newblock Sleeping hours: what is the ideal number and how does age impact this?
+\newblock {\em Nature and Science of Sleep}, 10:421--430.
+\newblock DOI: \href{https://doi.org/10.2147/NSS.S163071}{10.2147/NSS.S163071}.
+
+\bibitem[Chung et~al., 2006]{chung_latent_2006}
+Chung, H., Flaherty, B.~P., and Schafer, J.~L. (2006).
+\newblock Latent class logistic regression: application to marijuana use and attitudes among high school seniors.
+\newblock {\em Journal of the Royal Statistical Society: Series A (Statistics in Society)}, 169(4):723--743.
+\newblock DOI: \href{https://doi.org/10.1111/j.1467-985X.2006.00419.x}{10.1111/j.1467-985X.2006.00419.x}.
+
+\bibitem[Dempsey and Wyse, 2025]{dempsey_bayesian_2025}
+Dempsey, D. and Wyse, J. (2025).
+\newblock Bayesian variable selection in distributed lag models: a focus on binary quantile and count data regressions.
+\newblock {\em Communications in Statistics - Simulation and Computation}, 0(0):1--17.
+\newblock DOI: \href{https://doi.org/10.1080/03610918.2025.2458578}{10.1080/03610918.2025.2458578}.
+
+\bibitem[Dempster et~al., 1977]{dempster_maximum_1977}
+Dempster, A.~P., Laird, N.~M., and Rubin, D.~B. (1977).
+\newblock Maximum {Likelihood} from {Incomplete} {Data} via the {EM} {Algorithm}.
+\newblock {\em Journal of the Royal Statistical Society. Series B (Methodological)}, 39(1):1--38.
+\newblock DOI: \href{https://doi.org/https://doi.org/10.1111/j.2517-6161.1977.tb01600.x}{https://doi.org/10.1111/j.2517-6161.1977.tb01600.x}.
+
+\bibitem[Fop and Murphy, 2018]{fop_variable_2018}
+Fop, M. and Murphy, T.~B. (2018).
+\newblock Variable selection methods for model-based clustering.
+\newblock {\em Statistics Surveys}, 12(none):18--65.
+\newblock DOI: \href{https://doi.org/10.1214/18-SS119}{10.1214/18-SS119}.
+
+\bibitem[Fop et~al., 2017]{fop_variable_2017}
+Fop, M., Smart, K.~M., and Murphy, T.~B. (2017).
+\newblock Variable {Selection} for {Latent} {Class} {Analysis} with {Application} to {Low} {Back} {Pain} {Diagnosis}.
+\newblock {\em The Annals of Applied Statistics}, 11(4):2080--2110.
+\newblock DOI: \href{https://doi.org/https://doi.org/10.1214/17-AOAS1061}{https://doi.org/10.1214/17-AOAS1061}.
+
+\bibitem[Garrett and Zeger, 2000]{garrett_latent_2000}
+Garrett, E.~S. and Zeger, S.~L. (2000).
+\newblock Latent {Class} {Model} {Diagnosis}.
+\newblock {\em Biometrics}, 56(4):1055--1067.
+\newblock DOI: \href{https://doi.org/10.1111/j.0006-341X.2000.01055.x}{10.1111/j.0006-341X.2000.01055.x}.
+
+\bibitem[Gelfand and Smith, 1990]{gelfand_sampling-based_1990}
+Gelfand, A.~E. and Smith, A. F.~M. (1990).
+\newblock Sampling-{Based} {Approaches} to {Calculating} {Marginal} {Densities}.
+\newblock {\em Journal of the American Statistical Association}, 85(410):398--409.
+\newblock DOI: \href{https://doi.org/10.2307/2289776}{10.2307/2289776}.
+
+\bibitem[Goodman, 1974]{goodman_exploratory_1974}
+Goodman, L.~A. (1974).
+\newblock Exploratory {Latent} {Structure} {Analysis} {Using} {Both} {Identifiable} and {Unidentifiable} {Models}.
+\newblock {\em Biometrika}, 61(2):215--231.
+\newblock DOI: \href{https://doi.org/10.2307/2334349}{10.2307/2334349}.
+
+\bibitem[Gormley and Frühwirth-Schnatter, 2019]{gormley_mixture_2019}
+Gormley, I.~C. and Frühwirth-Schnatter, S. (2019).
+\newblock Mixture of experts models.
+\newblock In {\em Handbook of mixture analysis}, pages 271--307. Chapman and Hall/CRC.
+
+\bibitem[Holmes and Held, 2006]{holmes_bayesian_2006}
+Holmes, C.~C. and Held, L. (2006).
+\newblock Bayesian auxiliary variable models for binary and multinomial regression.
+\newblock {\em Bayesian Analysis}, 1(1):145--168.
+\newblock DOI: \href{https://doi.org/10.1214/06-BA105}{10.1214/06-BA105}.
+
+\bibitem[Holmes et~al., 2022]{holmes_polya-gamma_2022}
+Holmes, J.~B., Schofield, M.~R., and Barker, R.~J. (2022).
+\newblock Pólya-{Gamma} {Data} {Augmentation} and {Latent} {Variable} {Models} for {Multivariate} {Binomial} {Data}.
+\newblock {\em Journal of the Royal Statistical Society Series C: Applied Statistics}, 71(1):194--218.
+\newblock DOI: \href{https://doi.org/10.1111/rssc.12528}{10.1111/rssc.12528}.
+
+\bibitem[Hubert and Arabie, 1985]{hubert_comparing_1985}
+Hubert, L. and Arabie, P. (1985).
+\newblock Comparing partitions.
+\newblock {\em Journal of Classification}, 2(1):193--218.
+\newblock Publisher: Springer, DOI: \href{https://doi.org/10.1007/BF01908075}{10.1007/BF01908075}.
+
+\bibitem[Jacobs et~al., 1991]{jacobs_adaptive_1991}
+Jacobs, R.~A., Jordan, M.~I., Nowlan, S.~J., and Hinton, G.~E. (1991).
+\newblock Adaptive {Mixtures} of {Local} {Experts}.
+\newblock {\em Neural Computation}, 3(1):79--87.
+\newblock DOI: \href{https://doi.org/10.1162/neco.1991.3.1.79}{10.1162/neco.1991.3.1.79}.
+
+\bibitem[Liu and Culpepper, 2024]{liu_restricted_2024}
+Liu, Y. and Culpepper, S.~A. (2024).
+\newblock Restricted {Latent} {Class} {Models} for {Nominal} {Response} {Data}: {Identifiability} and {Estimation}.
+\newblock {\em Psychometrika}, 89(2):592--625.
+\newblock DOI: \href{https://doi.org/10.1007/s11336-023-09940-7}{10.1007/s11336-023-09940-7}.
+
+\bibitem[Malsiner-Walli et~al., 2025]{malsiner-walli_without_2025}
+Malsiner-Walli, G., Grün, B., and Frühwirth-Schnatter, S. (2025).
+\newblock Without pain – clustering categorical data using a {Bayesian} mixture of finite mixtures of latent class analysis models.
+\newblock {\em Advances in Data Analysis and Classification}.
+\newblock DOI: \href{https://doi.org/10.1007/s11634-025-00640-x}{10.1007/s11634-025-00640-x}.
+
+\bibitem[Matricciani et~al., 2019]{matricciani_childrens_2019}
+Matricciani, L., Paquet, C., Galland, B., Short, M., and Olds, T. (2019).
+\newblock Children's sleep and health: {A} meta-review.
+\newblock {\em Sleep Medicine Reviews}, 46:136--150.
+\newblock DOI: \href{https://doi.org/10.1016/j.smrv.2019.04.011}{10.1016/j.smrv.2019.04.011}.
+
+\bibitem[Meaklim et~al., 2020]{meaklim_sleep_2020}
+Meaklim, H., Jackson, M.~L., Bartlett, D., Saini, B., Falloon, K., Junge, M., Slater, J., Rehm, I.~C., and Meltzer, L.~J. (2020).
+\newblock Sleep education for healthcare providers: {Addressing} deficient sleep in {Australia} and {New} {Zealand}.
+\newblock {\em Sleep Health}, 6(5):636--650.
+\newblock DOI: \href{https://doi.org/10.1016/j.sleh.2020.01.012}{10.1016/j.sleh.2020.01.012}.
+
+\bibitem[Meltzer et~al., 2014]{meltzer_sleep_2014}
+Meltzer, L.~J., Plaufcan, M.~R., Thomas, J.~H., and Mindell, J.~A. (2014).
+\newblock Sleep {Problems} and {Sleep} {Disorders} in {Pediatric} {Primary} {Care}: {Treatment} {Recommendations}, {Persistence}, and {Health} {Care} {Utilization}.
+\newblock {\em Journal of Clinical Sleep Medicine}, 10(04):421--426.
+\newblock DOI: \href{https://doi.org/10.5664/jcsm.3620}{10.5664/jcsm.3620}.
+
+\bibitem[Mirfarah et~al., 2024]{mirfarah_robust_2024}
+Mirfarah, E., Naderi, M., Lin, T.-I., and Wang, W.-L. (2024).
+\newblock Robust {Bayesian} inference for the censored mixture of experts model using heavy-tailed distributions.
+\newblock {\em Advances in Data Analysis and Classification}.
+\newblock DOI: \href{https://doi.org/10.1007/s11634-024-00609-2}{10.1007/s11634-024-00609-2}.
+
+\bibitem[Ouyang and Xu, 2022]{ouyang_identifiability_2022}
+Ouyang, J. and Xu, G. (2022).
+\newblock Identifiability of {Latent} {Class} {Models} with {Covariates}.
+\newblock {\em Psychometrika}, 87(4):1343--1360.
+\newblock DOI: \href{https://doi.org/10.1007/s11336-022-09852-y}{10.1007/s11336-022-09852-y}.
+
+\bibitem[Owens et~al., 2000]{owens_childrens_2000}
+Owens, J.~A., Spirito, A., and McGuinn, M. (2000).
+\newblock The {Children}'s {Sleep} {Habits} {Questionnaire} ({CSHQ}): {Psychometric} {Properties} of {A} {Survey} {Instrument} for {School}-{Aged} {Children}.
+\newblock {\em Sleep}, 23(8):1--9.
+\newblock DOI: \href{https://doi.org/10.1093/sleep/23.8.1d}{10.1093/sleep/23.8.1d}.
+
+\bibitem[Pan and Huang, 2014]{pan_bayesian_2014}
+Pan, J.-C. and Huang, G.-H. (2014).
+\newblock Bayesian {Inferences} of {Latent} {Class} {Models} with an {Unknown} {Number} of {Classes}.
+\newblock {\em Psychometrika}, 79(4):621--646.
+\newblock DOI: \href{https://doi.org/10.1007/s11336-013-9368-7}{10.1007/s11336-013-9368-7}.
+
+\bibitem[Papastamoulis, 2016]{papastamoulis_labelswitching_2016}
+Papastamoulis, P. (2016).
+\newblock label.switching: {An} {R} package for dealing with the label switching problem in {MCMC} outputs.
+\newblock {\em Journal of Statistical Software, Code Snippets}, 69(1):1--24.
+\newblock DOI: \href{https://doi.org/10.18637/jss.v069.c01}{10.18637/jss.v069.c01}.
+
+\bibitem[Perry, 2013]{perry_raising_2013}
+Perry, G.~S. (2013).
+\newblock Raising {Awareness} of {Sleep} as a {Healthy} {Behavior}.
+\newblock {\em Preventing Chronic Disease}, 10.
+\newblock DOI: \href{https://doi.org/10.5888/pcd10.130081}{10.5888/pcd10.130081}.
+
+\bibitem[Polson et~al., 2013]{polson_bayesian_2013}
+Polson, N.~G., Scott, J.~G., and Windle, J. (2013).
+\newblock Bayesian {Inference} for {Logistic} {Models} {Using} {Pólya}–{Gamma} {Latent} {Variables}.
+\newblock {\em Journal of the American Statistical Association}, 108(504):1339--1349.
+\newblock DOI: \href{https://doi.org/10.1080/01621459.2013.829001}{10.1080/01621459.2013.829001}.
+
+\bibitem[Stephens, 2000]{stephens_dealing_2000}
+Stephens, M. (2000).
+\newblock Dealing {With} {Label} {Switching} in {Mixture} {Models}.
+\newblock {\em Journal of the Royal Statistical Society Series B: Statistical Methodology}, 62(4):795--809.
+\newblock DOI: \href{https://doi.org/10.1111/1467-9868.00265}{10.1111/1467-9868.00265}.
+
+\bibitem[Vermunt, 2010]{vermunt_latent_2010}
+Vermunt, J.~K. (2010).
+\newblock Latent {Class} {Modeling} with {Covariates}: {Two} {Improved} {Three}-{Step} {Approaches}.
+\newblock {\em Political Analysis}, 18(4):450--469.
+\newblock DOI: \href{https://doi.org/10.1093/pan/mpq025}{10.1093/pan/mpq025}.
+
+\bibitem[Wade, 2015]{wade_mcclustext_2015}
+Wade, S. (2015).
+\newblock mcclust.ext: {Point} estimation and credible balls for {Bayesian} cluster analysis.
+\newblock manual.
+
+\bibitem[Wade and Ghahramani, 2018]{wade_bayesian_2018}
+Wade, S. and Ghahramani, Z. (2018).
+\newblock Bayesian {Cluster} {Analysis}: {Point} {Estimation} and {Credible} {Balls} (with {Discussion}).
+\newblock {\em Bayesian Analysis}, 13(2):559--626.
+\newblock DOI: \href{https://doi.org/10.1214/17-BA1073}{10.1214/17-BA1073}.
+
+\bibitem[Walsh, 2022]{walsh_exploring_2022}
+Walsh, L. (2022).
+\newblock Exploring the {Barriers} to {Accessing} and {Successfully} {Implementing} {Behavioural} {Sleep} {Interventions} in {Neurotypical} and {Neurodiverse} {Children}.
+\newblock Master's thesis, Trinity College Dublin.
+
+\bibitem[White et~al., 2016]{white_bayesian_2016}
+White, A., Wyse, J., and Murphy, T.~B. (2016).
+\newblock Bayesian variable selection for latent class analysis using a collapsed {Gibbs} sampler.
+\newblock {\em Statistics and Computing}, 26(1):511--527.
+\newblock DOI: \href{https://doi.org/10.1007/s11222-014-9542-5}{10.1007/s11222-014-9542-5}.
+
+\bibitem[Xu et~al., 2024]{xu_variable_2024}
+Xu, H., Li, X., Zhang, Z., and Grannis, S. (2024).
+\newblock Variable selection for latent class analysis in the presence of missing data with application to record linkage.
+\newblock {\em Statistical Methods in Medical Research}, 33(6):966--980.
+\newblock DOI: \href{https://doi.org/10.1177/09622802241242317}{10.1177/09622802241242317}.
+
+\bibitem[Zens et~al., 2024]{zens_ultimate_2024}
+Zens, G., Frühwirth-Schnatter, S., and Wagner, H. (2024).
+\newblock Ultimate {Pólya} {Gamma} {Samplers}–{Efficient} {MCMC} for {Possibly} {Imbalanced} {Binary} and {Categorical} {Data}.
+\newblock {\em Journal of the American Statistical Association}, 119(548):2548--2559.
+\newblock DOI: \href{https://doi.org/10.1080/01621459.2023.2259030}{10.1080/01621459.2023.2259030}.
+
+\end{thebibliography}

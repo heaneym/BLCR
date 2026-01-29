@@ -5,7 +5,8 @@ LCR_post_process <- function(N_g_samples, z_samples, beta_samples,
                              M, K, n, log_like_samples, 
                              p, G, log_post_compute, item.sel, 
                              n_samples, N_gjk_samples, 
-                             theta_hyperparam, clust_var_prior){
+                             theta_hyperparam, clust_var_prior,
+                             Y_imputed_samples, Y_missing_indicator, Y){
   
   if(item.sel){
     theta_estimate_samples <- array(0, dim = c(G,M,max(K),n_samples))
@@ -53,9 +54,37 @@ LCR_post_process <- function(N_g_samples, z_samples, beta_samples,
   gamma_estimate_hard <- as.integer(gamma_estimate>0.5)
   gamma_sd <- apply(gamma_samples, 1, sd)
   mu_estimate <- X %*% beta_estimate
-  N_up_estimate_temp <- N_updates(z = z_estimate, Y_indicator = Y_indicator, N_jk = N_jk, nu = nu_estimate_hard)
+  N_up_estimate_temp <- N_updates(z = z_estimate, Y_indicator = Y_indicator, N_jk = N_jk, nu = nu_estimate_hard, Y_missing_indicator = Y_missing_indicator)
   N_gjk_estimate <- N_up_estimate_temp$N_gjk
+  N_gjk_array_estimate <- N_up_estimate_temp$N_gjk_array
   N_g_estimate <- N_up_estimate_temp$N_g
+
+  
+  Y_imputed_mode <- apply(Y_imputed_samples, c(1, 2), function(x) {
+    as.numeric(names(sort(table(x), decreasing = TRUE)[1]))
+  })
+  #Y_imputed_mode[Y_missing_indicator == 0] <- Y[Y_missing_indicator == 0]
+  Y_imputed_entropy <- apply(Y_imputed_samples, c(1, 2), function(x) {
+    probs <- table(x) / length(x)
+    -sum(probs * log(probs + 1e-10))
+  })
+  
+  # For each missing cell, store P(Y_ij = k) 
+  Y_imputed_probs <- array(0, dim = c(n, M, max(K)))
+  
+  for (i in 1:n) {
+    for (j in 1:M) {
+      if (Y_missing_indicator[i, j] == 1) {
+        tab <- table(factor(Y_imputed_samples[i, j, ], levels = 1:K[j]))
+        Y_imputed_probs[i, j, 1:K[j]] <- as.numeric(tab) / n_samples
+      }
+    }
+  }
+  Y_imputed_max_prob <- apply(Y_imputed_samples, c(1, 2), function(x) {
+    max(table(x)) / length(x)
+  })
+  
+  
   
   
   log_post_params_estimate <- list(
@@ -66,7 +95,7 @@ LCR_post_process <- function(N_g_samples, z_samples, beta_samples,
     beta_prior_cov_inv = beta_prior_cov_inv, 
     beta = beta_estimate, nu = nu_estimate_hard, M = M, 
     clust_var_prior = clust_var_prior,
-    K = K, N_jk = N_jk, N_gjk = N_gjk_estimate, 
+    K = K, N_jk = N_jk, N_gjk = N_gjk_array_estimate, 
     N_g = N_g_estimate, n = n, G = G
   )
   
@@ -119,8 +148,7 @@ LCR_post_process <- function(N_g_samples, z_samples, beta_samples,
      rownames(mat) <- theta_row_names
      mat
    })
-   
-   N_up_estimate <- N_updates(z = z_estimate_perm, Y_indicator = Y_indicator, N_jk = N_jk, nu = nu_estimate_hard)
+   N_up_estimate <- N_updates(z = z_estimate_perm, Y_indicator = Y_indicator, Y_missing_indicator = Y_missing_indicator, N_jk = N_jk, nu = nu)
    N_gjk_estimate_perm <- N_up_estimate$N_gjk
    N_g_estimate_perm <- N_up_estimate$N_g
   
@@ -147,12 +175,17 @@ LCR_post_process <- function(N_g_samples, z_samples, beta_samples,
     gamma_sd = gamma_sd,
     cov_ind = gamma_estimate_hard,
     N_gjk_estimate = N_gjk_estimate,
+    N_gjk_estimate = N_gjk_array_estimate,
     N_g_estimate = N_g_estimate,
     log_post = log_post_estimate,
     log_like = log_like_estimate,
     AIC = AIC,
     BIC = BIC,
-    DIC = DIC
+    DIC = DIC,
+    Y_imputed_mode = Y_imputed_mode,
+    Y_imputed_entropy = Y_imputed_entropy,
+    Y_imputed_probs = Y_imputed_probs,
+    Y_imputed_max_prob = Y_imputed_max_prob
   )
   return(outputs)
 }

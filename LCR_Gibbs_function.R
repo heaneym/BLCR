@@ -20,6 +20,7 @@ LCR_Gibbs <- function(X, Y, G,
   list2env(init, envir = environment())
   #want to create functions that initialise the sample arrays and select relevant functions
   z_update <- get_z_update_function(item.sel)
+  impute_missing_values <- get_imputation_function(item.sel)
   nu_update <- get_nu_update(item.sel)
   S_update <- get_S_update(item.sel)
   theta_update <- get_theta_update(item.sel)
@@ -34,21 +35,22 @@ LCR_Gibbs <- function(X, Y, G,
   start_time <- Sys.time()
   progress_interval <- 500
   for (count in 1:n_iter){
-    N_up <- N_updates(z = z, Y_indicator = Y_indicator, N_jk = N_jk, nu = nu)
+    N_up <- N_updates(z = z, Y_indicator = Y_indicator, Y_missing_indicator = Y_missing_indicator, N_jk = N_jk, nu = nu)
     N_g <- N_up$N_g
     N_gjk <- N_up$N_gjk
-    S <- S_update(S = S, Y_indicator = Y_indicator, z = z, M = M, G = G, K = K)
+    Y_current <- impute_missing_values(Y_current = Y_current, Y_missing_indicator = Y_missing_indicator, z = z, theta = theta, nu = nu, N_gjk = N_up$N_gjk_array, N_g = N_g, theta_hyperparam = theta_hyperparam, M = M, K = K)
+    Y_indicator <- 1*array(outer(Y_current, 1:max_K, "=="), dim = dim_Y_indicator)
+    S <- S_update(S = S, Y_indicator = Y_indicator, Y_missing_indicator = Y_missing_indicator, z = z, M = M, G = G, K = K)
     theta <- theta_update(S = S, theta_hyperparam = theta_hyperparam, K = K, G = G, M = M, theta = theta)
     mu <- mu_update(X = X, beta = beta)
     exp_mu <- exp(mu)
-    nu <- nu_update(nu = nu, M = M, K = K, G = G, theta_hyperparam = theta_hyperparam, N_g, N_gjk = N_gjk, inclusion_sum = inclusion_sum, exclusion_sum = exclusion_sum, count = count)
+    nu <- nu_update(nu = nu, M = M, K = K, G = G, theta_hyperparam = theta_hyperparam, N_g = N_g, N_gjk = N_up$N_gjk_array, Y_missing_indicator = Y_missing_indicator, inclusion_sum = inclusion_sum, exclusion_sum = exclusion_sum, count = count, z = z)
     C <- C_update(mu = mu, exp_mu = exp_mu, G = G, C = C)
     eta <- eta_update(mu = mu, C = C)
     logit_probs <- logit_probs_update(eta = eta)
     log_logit_probs <- log(logit_probs)
     log_theta <- log(theta)
     z_params <- list(
-      # Fill in the current values
       z = z, nu = nu, mu = mu, K = K, theta_hyperparam = theta_hyperparam,
       N_gjk = N_gjk, N_g = N_g, Y_indicator = Y_indicator, n = n, G = G,
       omega = omega, C = C, p = p, beta = beta, beta_cov_inv = beta_cov_inv,
@@ -57,7 +59,7 @@ LCR_Gibbs <- function(X, Y, G,
       X_current = X_current,
       
       log_logit_probs = log_logit_probs, log_theta = log_theta,
-      Y = Y, M = M
+      Y = Y, M = M, Y_missing_indicator = Y_missing_indicator
     )
     z_up <- z_update(z_params)
     list2env(z_up, envir = environment())
@@ -94,6 +96,7 @@ LCR_Gibbs <- function(X, Y, G,
       N_gjk_samples[,,,sample_count] <- N_gjk
       log_post_samples[sample_count] <- log_post
       log_like_samples[sample_count] <- log_like
+      Y_imputed_samples[,,sample_count] <- Y_current
     }
     if (verbose && count %% progress_interval == 0 && count > burnin) {
       elapsed <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
@@ -142,7 +145,10 @@ LCR_Gibbs <- function(X, Y, G,
                                    n_samples = n_samples,
                                    N_gjk_samples = N_gjk_samples,
                                    theta_hyperparam = theta_hyperparam,
-                                   clust_var_prior = clust_var_prior)
+                                   clust_var_prior = clust_var_prior,
+                                   Y_imputed_samples = Y_imputed_samples,
+                                   Y_missing_indicator = Y_missing_indicator,
+                                   Y = Y)
   list2env(post_process, envir = environment())
   samples <- list(beta_samples = beta_samples, 
                   omega_samples = omega_samples,
@@ -155,7 +161,8 @@ LCR_Gibbs <- function(X, Y, G,
                   N_gjk_samples = N_gjk_samples,
                   pi_samples = pi_samples,
                   log_post_samples = log_post_samples,
-                  log_like_samples = log_like_samples)
+                  log_like_samples = log_like_samples,
+                  Y_imputed_samples = Y_imputed_samples)
   result <- list()
   result$samples <- samples
   result$pi <- pi_estimate
@@ -188,6 +195,13 @@ LCR_Gibbs <- function(X, Y, G,
   result$item.ind <- item_ind
   result$N_gjk_estimate <- N_gjk_estimate
   result$N_g_estimate <- N_g_estimate
+  result$Y_imputed_mode <- Y_imputed_mode  
+  result$Y_imputed_probs <- Y_imputed_probs  
+  result$Y_imputed_max_prob <- Y_imputed_max_prob  
+  result$Y_imputed_entropy <- Y_imputed_entropy  
+  result$Y_missing_indicator <- Y_missing_indicator
+  result$Y <- Y
+  result$X <- X
   
   return(result)
 }

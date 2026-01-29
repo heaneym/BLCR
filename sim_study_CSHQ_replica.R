@@ -1,5 +1,6 @@
 library(BayesLCA)
 library(poLCA)
+library(mcclust.ext)
 
 replica_sim_theta_4group_reduced <- readRDS(file = 'C:/Users/matth/Documents/AIM CP Project/LCA/CSHQ_analysis/sim_theta_4group_reduced')
 replica_sim_theta_6group_reduced <- readRDS(file = 'C:/Users/matth/Documents/AIM CP Project/LCA/CSHQ_analysis/sim_theta_6group_reduced')
@@ -7,6 +8,9 @@ replica_sim_theta_6group_reduced <- readRDS(file = 'C:/Users/matth/Documents/AIM
 replica_sim_pi_4group_reduced <- readRDS(file = 'C:/Users/matth/Documents/AIM CP Project/LCA/CSHQ_analysis/sim_pi_4group_reduced') 
 replica_sim_pi_6group_reduced <- readRDS(file = 'C:/Users/matth/Documents/AIM CP Project/LCA/CSHQ_analysis/sim_pi_6group_reduced') 
 
+
+CSHQ_LCR_replica_sim_data_4group_large <- LCR_sim_data(theta = replica_sim_theta_4group_reduced, beta = (CSHQ_ASD_beta_estimate_varsel_with_intercept - CSHQ_ASD_beta_estimate_varsel_with_intercept[,4])[,1:3], n_samples = 1500)
+saveRDS(CSHQ_LCR_replica_sim_data_4group_large, file = 'CSHQ_LCR_replica_sim_data_4group_large')
 
 # replica_CSHQ_sim_data_6group1 <- poLCA.simdata(N = 150, probs = replica_sim_theta_6group_reduced, nclass = 6, P = replica_sim_pi_6group_reduced)
 # replica_CSHQ_sim_data_6group2 <- poLCA.simdata(N = 150, probs = replica_sim_theta_6group_reduced, nclass = 6, P = replica_sim_pi_6group_reduced)
@@ -237,7 +241,11 @@ sim_study_replica_data_minVI_clusters <- function(obs_per_dataset, theta, pi){
 sim_study_replica_CSHQ_4group <- sim_study_replica_data_minVI_clusters(obs_per_dataset = rep(150, 150), theta = replica_sim_theta_4group_reduced, pi = replica_sim_pi_4group_reduced)
 sim_study_replica_CSHQ_6group <- sim_study_replica_data_minVI_clusters(obs_per_dataset = rep(150, 150), theta = replica_sim_theta_6group_reduced, pi = replica_sim_pi_6group_reduced)
 
+table(unlist(sim_study_replica_CSHQ_4group$clustered_G_vals))
+table(unlist(sim_study_replica_CSHQ_6group$clustered_G_vals))
 
+table(unlist(sim_study_replica_CSHQ_4group$clustered_G_vals))/sum(table(unlist(sim_study_replica_CSHQ_4group$clustered_G_vals)))
+table(unlist(sim_study_replica_CSHQ_6group$clustered_G_vals))/sum(table(unlist(sim_study_replica_CSHQ_4group$clustered_G_vals)))
 
 # LCA_4groupfit_CSHQ_replica_4group <- blca.gibbs(X = CSHQ_Y_replica_4group, G = 4, verbose = TRUE)
 # LCA_5groupfit_CSHQ_replica_4group <- blca.gibbs(X = CSHQ_Y_replica_4group, G = 5, verbose = TRUE)

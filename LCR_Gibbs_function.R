@@ -29,7 +29,7 @@ LCR_Gibbs <- function(X, Y, G,
   n_iter <- thinby*n_samples + burnin
   sample_arrays <- LCR_init_sample_arrays(beta = beta, n_samples = n_samples, omega = omega,
                                           w = w, z = z, theta = theta, gamma = gamma, N_g = N_g,
-                                          N_gjk = N_gjk, nu = nu)
+                                          N_gjk = N_gjk, nu = nu, Y)
   list2env(sample_arrays, envir = environment())
   sample_count <- 0
   start_time <- Sys.time()

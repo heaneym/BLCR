@@ -145,7 +145,7 @@ LCR_init <- function(X, Y, G, beta_prior_mean, beta_prior_cov, theta_hyperparam,
 
 LCR_init_sample_arrays <- function(beta, n_samples, omega,
                                    w, z, theta, gamma, N_g,
-                                   N_gjk, nu){
+                                   N_gjk, nu, Y){
   beta_samples <- array(0, dim = c(dim(beta), n_samples))
   omega_samples <- array(0, dim = c(dim(omega), n_samples))
   w_samples <- array(0, dim = c(dim(w), n_samples))
@@ -155,7 +155,7 @@ LCR_init_sample_arrays <- function(beta, n_samples, omega,
   N_g_samples <- array(0, dim = c(length(N_g), n_samples))
   N_gjk_samples <- array(0, dim = c(dim(N_gjk), n_samples))
   nu_samples <- matrix(0, nrow = length(nu), ncol = n_samples)
-  Y_imputed_samples <- array(0, dim = c(n,M,n_samples))
+  Y_imputed_samples <- array(0, dim = c(nrow(Y),ncol(Y),n_samples))
   log_post_samples <- numeric(n_samples)
   log_like_samples <- numeric(n_samples)
   return(list(beta_samples = beta_samples, omega_samples = omega_samples,

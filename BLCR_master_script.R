@@ -6,7 +6,18 @@ source('LCR_Gibbs.R')
 source('LCR_sim_data.R')
 source('beta_summary_table.R')
 source('LCR_posterior_membership_prob.R')
-source('LCA_mosaic_plot.R')
+source('BLCR_plot_functions/LCA_mosaic_plot.R')
+source('BLCR_plot_functions/plot_combined_predictive_T.R')
+source('BLCR_plot_functions/compute_expected_subscale_total_across_iterations.R')
+source('BLCR_plot_functions/predictive_pmf_T_by_ASD_iter.R')
+source('BLCR_plot_functions/compute_pi_asd.R')
+source('BLCR_plot_functions/pmf_T_given_class.R')
+source('BLCR_plot_functions/predictive_pmf_T_by_ASD.R')
+source('BLCR_plot_functions/build_plot_df.R')
+source('BLCR_plot_functions/plot_predictive_T.R')
+source('BLCR_plot_functions/compute_pi_asd_across_iterations.R')
+source('BLCR_plot_functions/compute_theta_samples_from_counts.R')
+source('BLCR_plot_functions/plot_subscale_diff_boxplot.R')
 library(ggplot2)
 library(RColorBrewer)
 library(reshape2) 
@@ -240,7 +251,6 @@ cat("Posterior inclusion probability for predictor variables \n",
 
 plot(sim1_LCR_fit_covsel$samples$log_post_samples, type = 'l', main = 'Simulated Data 1 (predictor selection)', xlab = 'Iteration Number', ylab = 'log posterior')
 acf(sim1_LCR_fit_covsel$samples$log_post_samples, main = 'Simulated Data 1 (predictor selection)')
-
 
 
 
@@ -1236,7 +1246,29 @@ sim2_Y_400_9 <- sim2_data$Y[sample_indices_400_9,]
 sim2_Y_400_10 <- sim2_data$Y[sample_indices_400_10,]
 
 
+sim2_subsample_indices <- list(
+  n150 = list(
+    sample_indices_150_1, sample_indices_150_2, sample_indices_150_3, sample_indices_150_4, sample_indices_150_5,
+    sample_indices_150_6, sample_indices_150_7, sample_indices_150_8, sample_indices_150_9, sample_indices_150_10
+  ),
+  n200 = list(
+    sample_indices_200_1, sample_indices_200_2, sample_indices_200_3, sample_indices_200_4, sample_indices_200_5,
+    sample_indices_200_6, sample_indices_200_7, sample_indices_200_8, sample_indices_200_9, sample_indices_200_10
+  ),
+  n300 = list(
+    sample_indices_300_1, sample_indices_300_2, sample_indices_300_3, sample_indices_300_4, sample_indices_300_5,
+    sample_indices_300_6, sample_indices_300_7, sample_indices_300_8, sample_indices_300_9, sample_indices_300_10
+  ),
+  n400 = list(
+    sample_indices_400_1, sample_indices_400_2, sample_indices_400_3, sample_indices_400_4, sample_indices_400_5,
+    sample_indices_400_6, sample_indices_400_7, sample_indices_400_8, sample_indices_400_9, sample_indices_400_10
+  )
+)
 
+saveRDS(
+  sim2_subsample_indices,
+  file.path("data", "sim2_subsample_indices.rds")
+)
 
 
 
@@ -1860,7 +1892,7 @@ mosaic_plots2_6grid_selection <- lapply(seq_along(mosaic_plot_6grid_selection), 
 })
 
 CSHQ_LCA_6grid_mosaic_plot <- wrap_plots(mosaic_plots2_6grid_selection, ncol = 3) +
-  plot_layout(guides = "collect") &
+  plot_layout(guides = "collect") +
   theme(
     text = element_text(size = 16),          
     plot.title = element_text(size = 18),    
@@ -1871,6 +1903,7 @@ CSHQ_LCA_6grid_mosaic_plot <- wrap_plots(mosaic_plots2_6grid_selection, ncol = 3
     legend.position = "right",
     panel.grid = element_blank()
   )
+
 
 
 # ggsave(
@@ -2553,6 +2586,404 @@ final_ridgeline_plot_betaD_CSHQ_varsel <- ggplot(long_betaD_samples_data_CSHQ_va
 
 
 
+#Creating Mosaic Plots for the variable selection LCR (using pi estimate for the widths)
+#Using variables BR5, SOD1, SD3, SA1, SA3, NW1
+
+CSHQ_mosaic_variables <- CSHQ_LCR_varsel$itemprob[which(CSHQ_LCR_varsel$item.ind == 1)][c(3,4,7,8,10,12)]
+
+mosaic_plot_6grid_selection <- plot_mosaic_gg_LCA(itemprob = CSHQ_mosaic_variables, classprob = CSHQ_LCR_varsel$pi, show_y_axis_numbers = TRUE, show_title = FALSE)
+
+mosaic_plot_6grid_titles <- c('Bedtime Resistance 5', 'Sleep Onset Delay', 'Sleep Duration 3', 'Sleep Anxiety 1', 'Sleep Anxiety 3', 'Night Waking 1')
+
+cb_palette_mosaic <- c(
+  "Response 1" = "#0072B2",
+  "Response 2" = "#E69F00",
+  "Response 3" = "#D55E00"
+)
+
+mosaic_plot_6grid_selection <- Map(function(p, ttl) {
+  p +
+    labs(title = ttl, fill = "Response") +
+    scale_fill_manual(
+      name   = "Response",
+      values = cb_palette_mosaic,
+      limits = c("Response 1","Response 2","Response 3"),
+      labels = c("1","2","3"),
+      drop   = FALSE
+    ) +
+    theme_minimal(base_size = 15) +
+    theme(
+      panel.grid = element_blank(),  
+      plot.title = element_text(hjust = 0.5),
+      legend.position = "none"       
+    )
+}, mosaic_plot_6grid_selection, mosaic_plot_6grid_titles)
+
+
+
+blank_y <- theme(
+  axis.title.y = element_blank(),
+  axis.text.y  = element_blank(),
+  axis.ticks.y = element_blank()
+)
+ncol <- 3
+mosaic_plots2_6grid_selection <- lapply(seq_along(mosaic_plot_6grid_selection), function(i) {
+  col_idx <- ((i - 1) %% ncol) + 1
+  if (col_idx != 1) mosaic_plot_6grid_selection[[i]] + blank_y else mosaic_plot_6grid_selection[[i]]
+})
+
+CSHQ_LCR_6grid_mosaic_plot <- wrap_plots(mosaic_plots2_6grid_selection, ncol = 3) +
+  plot_layout(guides = "collect") +
+  theme(
+    text = element_text(size = 16),          
+    plot.title = element_text(size = 18),    
+    axis.title = element_text(size = 14),    
+    axis.text = element_text(size = 12),     
+    legend.title = element_text(size = 14),
+    legend.text  = element_text(size = 12),
+    legend.position = "right",
+    panel.grid = element_blank()
+  )
+
+
+
+# ggsave(
+#   filename = "./CSHQ_plots/CSHQ_6grid_LCR_mosaic.png",
+#   plot = CSHQ_LCR_6grid_mosaic_plot ,
+#   width = 16, height = 9, units = "in",
+#   dpi = 600
+# )
+# 
+# ggsave(
+#   filename = "./CSHQ_plots/CSHQ_6grid_LCR_mosaic.pdf",
+#   plot = CSHQ_LCR_6grid_mosaic_plot ,
+#   width = 16, height = 9,
+# )
+
+
+#Now creating a grid to display mosaic plots of all of the item variables. This will consist of a grid of 3 rows and a grid of 4 rows 
+#Will keep the mosaic plot legend at the very top for clarity
+
+CSHQ_LCR_full_mosaic_grid1_vars <- CSHQ_LCR_varsel$itemprob[which(CSHQ_LCR_varsel$item.ind == 1)][1:12]
+CSHQ_LCR_full_mosaic_grid2_vars <- CSHQ_LCR_varsel$itemprob[which(CSHQ_LCR_varsel$item.ind == 1)][13:21]
+
+#Now want to create each of the grid plots
+
+#Starting with the first one
+
+mosaic_plot_grid_full1 <- plot_mosaic_gg_LCA(itemprob = CSHQ_LCR_full_mosaic_grid1_vars, classprob = CSHQ_LCR_varsel$pi, show_y_axis_numbers = TRUE, show_title = FALSE)
+
+mosaic_plot_grid_full1_names <- c('Bedtime Resistance 2', 'Bedtime Resistance 3', 'Bedtime Resistance 5', 'Sleep Onset Delay', 'Sleep Duration 1', 'Sleep Duration 2', 'Sleep Duration 3', 'Sleep Anxiety 1', 'Sleep Anxiety 2', 'Sleep Anxiety 3', 'Sleep Anxiety 4', 'Night Waking 1')
+
+mosaic_plot_grid_full1 <- Map(function(p, ttl) {
+  p +
+    labs(title = ttl, fill = "Response") +
+    scale_fill_manual(
+      name   = "Response",
+      values = cb_palette_mosaic,
+      limits = c("Response 1","Response 2","Response 3"),
+      labels = c("1","2","3"),
+      drop   = FALSE
+    ) +
+    theme_minimal(base_size = 15) + 
+    theme(
+      plot.title = element_text(hjust = 0.5),
+      legend.position = "none",    
+      panel.grid = element_blank()  
+    )
+}, mosaic_plot_grid_full1, mosaic_plot_grid_full1_names)
+
+
+blank_y <- theme(
+  axis.title.y = element_blank(),
+  axis.text.y  = element_blank(),
+  axis.ticks.y = element_blank()
+)
+ncol <- 3
+mosaic_plots2_grid_full1 <- lapply(seq_along(mosaic_plot_grid_full1), function(i) {
+  col_idx <- ((i - 1) %% ncol) + 1
+  if (col_idx != 1) mosaic_plot_grid_full1[[i]] + blank_y else mosaic_plot_grid_full1[[i]]
+})
+
+
+
+CSHQ_LCR_mosaic_full1_plot <- wrap_plots(mosaic_plots2_grid_full1, ncol = 3) +
+  plot_layout(guides = "collect") +
+  theme(
+    text = element_text(size = 16),          
+    plot.title = element_text(size = 18),    
+    axis.title = element_text(size = 14),    
+    axis.text = element_text(size = 12),     
+    legend.title = element_text(size = 10),
+    legend.text  = element_text(size = 10),
+    legend.position = "right",
+    legend.key.width = unit(0.5, 'cm'),    
+    legend.key.height = unit(1.2, 'cm'),   
+    panel.grid = element_blank()
+  )
+
+
+ggsave(
+ filename = './CSHQ_plots/CSHQ_full_grid_LCR_mosaic1.png',
+ plot = CSHQ_LCR_mosaic_full1_plot,
+ width = 16, height = 18, units = 'in',
+ dpi = 600
+)
+ggsave(
+ filename = './CSHQ_plots/CSHQ_full_grid_LCR_mosaic1.pdf',
+ plot = CSHQ_LCR_mosaic_full1_plot,
+ width = 16, height = 18
+)
+
+#I accidentally overwrote the LCA mosaic plots here so need to run that again if I want that back.
+
+mosaic_plot_grid_full2 <- plot_mosaic_gg_LCA(itemprob = CSHQ_LCR_full_mosaic_grid2_vars, classprob = CSHQ_LCR_varsel$pi, show_y_axis_numbers = TRUE, show_title = FALSE)
+
+mosaic_plot_grid_full2_names <- c('Night Waking 2', 'Night Waking 3', 'Parasomnias 2', 'Parasomnias 3', 'Parasomnias 5', 'Daytime Sleepiness 2', 'Daytime Sleepiness 4', 'Daytime Sleepiness 5', 'Daytime Sleepiness 6')
+
+mosaic_plot_grid_full2 <- Map(function(p, ttl) {
+  p +
+    labs(title = ttl, fill = "Response") +
+    scale_fill_manual(
+      name   = "Response",
+      values = cb_palette_mosaic,
+      limits = c("Response 1","Response 2","Response 3"),
+      labels = c("1","2","3"),
+      drop   = FALSE
+    ) +
+    theme_minimal(base_size = 15) + 
+    theme(
+      plot.title = element_text(hjust = 0.5),
+      legend.position = "none",      
+      panel.grid = element_blank()   
+    )
+}, mosaic_plot_grid_full2, mosaic_plot_grid_full2_names)
+
+
+blank_y <- theme(
+  axis.title.y = element_blank(),
+  axis.text.y  = element_blank(),
+  axis.ticks.y = element_blank()
+)
+ncol <- 3
+mosaic_plots2_grid_full2 <- lapply(seq_along(mosaic_plot_grid_full2), function(i) {
+  col_idx <- ((i - 1) %% ncol) + 1
+  if (col_idx != 1) mosaic_plot_grid_full2[[i]] + blank_y else mosaic_plot_grid_full2[[i]]
+})
+
+
+
+CSHQ_LCR_mosaic_full2_plot <- wrap_plots(mosaic_plots2_grid_full2, ncol = 3) +
+  plot_layout(guides = "collect") +
+  theme(
+    text = element_text(size = 16),          
+    plot.title = element_text(size = 18),    
+    axis.title = element_text(size = 14),    
+    axis.text = element_text(size = 12),     
+    legend.title = element_text(size = 10),
+    legend.text  = element_text(size = 10),
+    legend.position = "right",
+    legend.key.width = unit(0.5, 'cm'),    
+    legend.key.height = unit(1.2, 'cm'),   
+    panel.grid = element_blank()
+  )
+
+# ggsave(
+#  filename = './CSHQ_plots/CSHQ_full_grid_LCR_mosaic2.png',
+#  plot = CSHQ_LCR_mosaic_full2_plot,
+#  width = 16, height = 13.5, units = 'in',
+#  dpi = 600
+# )
+# ggsave(
+#  filename = './CSHQ_plots/CSHQ_full_grid_LCR_mosaic2.pdf',
+#  plot = CSHQ_LCR_mosaic_full2_plot,
+#  width = 16, height = 13.5
+# )
+
+
+
+
+
+#Creating profile plot for 4 group LCR varsel groups
+
+Y_CSHQ_reduced <- Y_CSHQ[,which(CSHQ_LCR_varsel$item.ind == 1)] 
+
+#setting the minimum possible subscale totals as the baseline
+minBR <- 3
+minSOD <- 1
+minSD <- 3
+minSA <- 4
+minNW <- 3
+minP <- 3
+minDS <- 4
+
+CSHQ_Y_reduced_BR <- Y_CSHQ_reduced[,1:3]
+CSHQ_Y_reduced_SOD <- Y_CSHQ_reduced[,4]
+CSHQ_Y_reduced_SD <- Y_CSHQ_reduced[,5:7]
+CSHQ_Y_reduced_SA <- Y_CSHQ_reduced[,8:11]
+CSHQ_Y_reduced_NW <- Y_CSHQ_reduced[,12:14]
+CSHQ_Y_reduced_P <- Y_CSHQ_reduced[,15:17]
+CSHQ_Y_reduced_DS <- Y_CSHQ_reduced[,18:21]
+
+total_BR_relevelled <- rowSums(CSHQ_Y_reduced_BR) - minBR
+total_SOD_relevelled <- CSHQ_Y_reduced_SOD - minSOD
+total_SD_relevelled <- rowSums(CSHQ_Y_reduced_SD) - minSD
+total_SA_relevelled <- rowSums(CSHQ_Y_reduced_SA) - minSA
+total_NW_relevelled <- rowSums(CSHQ_Y_reduced_NW) - minNW
+total_P_relevelled <- rowSums(CSHQ_Y_reduced_P) - minP
+total_DS_relevelled <- rowSums(CSHQ_Y_reduced_DS) - minDS
+
+total_BR_standardised <- scale(total_BR_relevelled)
+total_SOD_standardised <- scale(total_SOD_relevelled)
+total_SD_standardised <- scale(total_SD_relevelled)
+total_SA_standardised <- scale(total_SA_relevelled)
+total_NW_standardised <- scale(total_NW_relevelled)
+total_P_standardised <- scale(total_P_relevelled)
+total_DS_standardised <- scale(total_DS_relevelled)
+
+subscale_total_mat_CSHQ_itemsel <- cbind(total_BR_relevelled, 
+                                         total_SOD_relevelled, 
+                                         total_SD_relevelled,
+                                         total_SA_relevelled,
+                                         total_NW_relevelled,
+                                         total_P_relevelled,
+                                         total_DS_relevelled) 
+
+subscale_total_mat_CSHQ_itemsel_standardised <- cbind(total_BR_standardised, 
+                                                      total_SOD_standardised, 
+                                                      total_SD_standardised,
+                                                      total_SA_standardised,
+                                                      total_NW_standardised,
+                                                      total_P_standardised,
+                                                      total_DS_standardised) 
+
+colnames(subscale_total_mat_CSHQ_itemsel) <- c('BR', 'SOD', 'SD', 'SA', 'NW', 'P', 'DS')
+colnames(subscale_total_mat_CSHQ_itemsel_standardised) <- c('BR', 'SOD', 'SD', 'SA', 'NW', 'P', 'DS')
+
+#subsetting into assigned clusters
+subscale_total_mat_CSHQ_LCR_groupA <- subscale_total_mat_CSHQ_itemsel[which(CSHQ_varsel_minVI_cluster$cl == 1),]
+subscale_total_mat_CSHQ_LCR_groupB <- subscale_total_mat_CSHQ_itemsel[which(CSHQ_varsel_minVI_cluster$cl == 2),]
+subscale_total_mat_CSHQ_LCR_groupC <- subscale_total_mat_CSHQ_itemsel[which(CSHQ_varsel_minVI_cluster$cl == 3),]
+subscale_total_mat_CSHQ_LCR_groupD <- subscale_total_mat_CSHQ_itemsel[which(CSHQ_varsel_minVI_cluster$cl == 4),]
+
+subscale_total_mat_CSHQ_LCR_groupA_standardised <- subscale_total_mat_CSHQ_itemsel_standardised[which(CSHQ_varsel_minVI_cluster$cl == 1),]
+subscale_total_mat_CSHQ_LCR_groupB_standardised <- subscale_total_mat_CSHQ_itemsel_standardised[which(CSHQ_varsel_minVI_cluster$cl == 2),]
+subscale_total_mat_CSHQ_LCR_groupC_standardised <- subscale_total_mat_CSHQ_itemsel_standardised[which(CSHQ_varsel_minVI_cluster$cl == 3),]
+subscale_total_mat_CSHQ_LCR_groupD_standardised <- subscale_total_mat_CSHQ_itemsel_standardised[which(CSHQ_varsel_minVI_cluster$cl == 4),]
+
+#creating a matrix with groups as rows, and corresponding mean subscale totals as columns
+CSHQ_LCR_profile_mat <- rbind(apply(subscale_total_mat_CSHQ_LCR_groupA, 2, mean), 
+                              apply(subscale_total_mat_CSHQ_LCR_groupB, 2, mean), 
+                              apply(subscale_total_mat_CSHQ_LCR_groupC, 2, mean),
+                              apply(subscale_total_mat_CSHQ_LCR_groupD, 2, mean))
+CSHQ_LCR_profile_mat_standardised <- rbind(apply(subscale_total_mat_CSHQ_LCR_groupA_standardised, 2, mean), 
+                                           apply(subscale_total_mat_CSHQ_LCR_groupB_standardised, 2, mean), 
+                                           apply(subscale_total_mat_CSHQ_LCR_groupC_standardised, 2, mean),
+                                           apply(subscale_total_mat_CSHQ_LCR_groupD_standardised, 2, mean))
+
+subscale_names <- c("Bedtime Resistance", "Sleep Onset Delay", "Sleep Duration", "Sleep Anxiety", "Night Waking", "Parasomnias", "Daytime Sleepiness")
+CSHQ_LCR_profile_df <- tibble(
+  Subscale = rep(subscale_names, times = 4),
+  Score = c(t(CSHQ_LCR_profile_mat)),
+  Group = rep(c('A', 'B', 'C', 'D'), each = length(subscale_names))
+)
+
+CSHQ_LCR_profile_df_standardised <- tibble(
+  Subscale = rep(subscale_names, times = 4),
+  Score = c(t(CSHQ_LCR_profile_mat_standardised)),
+  Group = rep(c('A', 'B', 'C', 'D'), each = length(subscale_names))
+)
+
+CSHQ_LCR_profile_plot <- ggplot(CSHQ_LCR_profile_df,
+                                aes(x = Subscale, y = Score, group = Group, color = Group)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 2.4) +
+  theme_minimal(base_size = 18) +
+  labs(
+    title = "Sleep Profile by Latent Class",
+    subtitle = "Mean Relevelled Subscale Scores by Group",
+    x = "CSHQ Subscale",
+    y = "Mean Score"
+  ) +
+  scale_color_brewer(palette = "Dark2") +
+  theme(
+    legend.title = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(size = 22, face = "bold"),
+    plot.subtitle = element_text(size = 18),
+    legend.text = element_text(size = 14)
+  )
+
+CSHQ_LCR_profile_plot_standardised <- ggplot(CSHQ_LCR_profile_df_standardised,
+                                             aes(x = Subscale, y = Score, group = Group, color = Group)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 2.4) +
+  theme_minimal(base_size = 18) +
+  labs(
+    title = "Sleep Profile by Latent Class",
+    subtitle = "Mean Relevelled Subscale Scores (standardised) by Group",
+    x = "CSHQ Subscale",
+    y = "Mean Score"
+  ) +
+  scale_color_brewer(palette = "Dark2") +
+  theme(
+    legend.title = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(size = 22, face = "bold"),
+    plot.subtitle = element_text(size = 18),
+    legend.text = element_text(size = 14)
+  )
+
+
+
+# ggsave(
+# filename = "./CSHQ_plots/CSHQ_LCR_sleep_profile_plot.png",
+# plot = CSHQ_LCR_profile_plot,
+# width = 16, height = 9, units = "in",
+# dpi = 600
+# )
+# ggsave(
+# filename = "./CSHQ_plots/CSHQ_LCR_sleep_profile_plot.pdf",
+# plot = CSHQ_LCR_profile_plot,
+# width = 16, height = 8.5
+# )
+# ggsave(
+# filename = "./CSHQ_plots/CSHQ_LCR_sleep_profile_plot.png",
+# plot = CSHQ_LCR_profile_plot_standardised,
+# width = 16, height = 9, units = "in",
+# dpi = 600
+# )
+# ggsave(
+# filename = "./CSHQ_plots/CSHQ_LCR_sleep_profile_plot_standardised.pdf",
+# plot = CSHQ_LCR_profile_plot_standardised,
+# width = 16, height = 8.5
+# )
+
+
+
+
+
+
+
+#Computing the probabilities of giving a response of either sometimes or usually
+
+sometimes_usually_combined_itemprob_LCR <- lapply(CSHQ_LCR_varsel$itemprob, function(mat) {
+  cbind(mat[, 1], mat[, 2] + mat[, 3])
+})
+
+names(sometimes_usually_combined_itemprob_LCR) <- colnames(Y_CSHQ)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2562,9 +2993,9 @@ final_ridgeline_plot_betaD_CSHQ_varsel <- ggplot(long_betaD_samples_data_CSHQ_va
 ASD_beta_coeff_samples_varsel <- CSHQ_LCR_varsel$samples$beta_samples[4,,, drop = FALSE] 
 ASD_beta_coeff_samples_varsel_with_intercept <- CSHQ_LCR_varsel$samples$beta_samples[c(1,4),,, drop = FALSE] 
 
-zero_slices <- numeric(dim(ASD_beta_coeff_samples_varsel)[3])
-for (slice in 1:dim(ASD_beta_coeff_samples_varsel)[3]){
-  zero_slices[slice] <- 1*ifelse(all(ASD_beta_coeff_samples_varsel[,,slice] == 0), 1, 0)
+zero_slices <- numeric(5000)
+for (slice in 1:5000){
+  zero_slices[slice] <- 1*ifelse(CSHQ_LCR_varsel$samples$gamma_samples[4,slice] == 0, 1, 0)
 }
 
 ASD_beta_coeff_nonzero_samples <- ASD_beta_coeff_samples_varsel[,,which(zero_slices == 0), drop = FALSE]
@@ -2784,6 +3215,230 @@ final_combined_ridgeline_plot_CSHQ_ASD_only <- ggplot(combined_beta_data_ASD_onl
 #   width = 8,
 #   height = 3.75
 # )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Creating visualisations tailored to the LCR model with CSHQ data specifically
+
+
+
+#Plotting the pmf of total CSHQ score for ASD vs non-ASD, with stacked plots for group membership 
+asd_vs_nonasd_CSHQ_total_density <- plot_predictive_T(theta = CSHQ_LCR_varsel$itemprob, beta = CSHQ_ASD_beta_estimate_varsel_with_intercept)
+
+
+# In order to get the expected subscale totals, we need to first extract point estimates for the theta values 
+#on each of the sampler iterations.
+
+theta_samples_collapsed_estimate <- compute_theta_samples_from_counts(N_gjk_samples = CSHQ_LCR_varsel$samples$N_gjk_samples, N_g_samples = CSHQ_LCR_varsel$samples$N_g_samples)
+
+# Need to account for permutation of groups as well
+
+theta_samples_collapsed_estimate_perm <- theta_samples_collapsed_estimate[c(4,1,3,2),,,]
+
+
+
+
+
+
+
+
+
+#We'll plot with all iterations included as well as the ones where only ASD was included. Also should compare with standardising per subscale in some way
+
+#We have the iterations for which ASD is not included as zero_slices, so we can easily subset using this
+
+
+
+
+###CURRENTLY IN THE PROCESS OF CONVERTING THIS INTO A FUNCTION!!!
+
+
+CSHQ_LCR_varsel_compute_expected_subscale_totals_asd_nonzero <- compute_expected_subscale_total_across_iterations(theta_samples = theta_samples_collapsed_estimate_perm[,,,which(zero_slices == 0)],
+                                                                                                          asd = 1, 
+                                                                                                          beta_samples = CSHQ_LCR_varsel$samples$beta_samples[,,which(zero_slices == 0)])
+
+
+CSHQ_LCR_varsel_compute_expected_subscale_totals_non_asd_nonzero <- compute_expected_subscale_total_across_iterations(theta_samples = theta_samples_collapsed_estimate_perm[,,,which(zero_slices == 0)],
+                                                                                                              asd = 0, 
+                                                                                                              beta_samples = CSHQ_LCR_varsel$samples$beta_samples[,,which(zero_slices == 0)])
+
+
+
+
+
+diff_CSHQ_LCR_varsel_compute_expected_subscale_totals_nonzero <- CSHQ_LCR_varsel_compute_expected_subscale_totals_asd_nonzero$expected_subscale_total - CSHQ_LCR_varsel_compute_expected_subscale_totals_non_asd_nonzero$expected_subscale_total
+
+diff_nonzero_df <- as.data.frame(diff_CSHQ_LCR_varsel_compute_expected_subscale_totals_nonzero)
+colnames(diff_nonzero_df) <- c('BR','SOD','SD','SA','NW','P','SDB','DS')
+
+diff_df_long_nonzero <- diff_nonzero_df %>%
+  pivot_longer(everything(), names_to = "Column", values_to = "Value")
+
+
+ggplot(diff_df_long_nonzero, aes(x = Column, y = Value, fill = Column)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Boxplots of Difference between Subscale Totals", x = "Columns", y = "Values")
+
+
+
+
+
+
+
+
+
+
+
+label_map <- c(
+  'BR' = 'Bedtime Resistance',
+  'SOD' = 'Sleep Onset Delay', 
+  'SD' = 'Sleep Duration',
+  'SA' = 'Sleep Anxiety',
+  'NW' = 'Night Waking',
+  'P' = 'Parasomnias',
+  'SDB' = 'Sleep Disordered Breathing',
+  'DS' = 'Daytime Sleepiness'
+)
+
+diff_df_long_nonzero <- diff_df_long_nonzero %>%
+  mutate(
+    Column_long = label_map[Column],
+    median_val = tapply(Value, Column, median)[Column]
+  ) %>%
+  arrange(median_val) %>%
+  mutate(Column_long = factor(Column_long, levels = unique(Column_long)))
+
+boxplot_expected_CSHQ_subscale_total_difference <- ggplot(diff_df_long_nonzero, aes(x = Column_long, y = Value, fill = Column_long)) +
+  geom_boxplot(alpha = 0.7, outlier.shape = 21, outlier.fill = "white") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red", size = 1.5) +
+  stat_summary(fun.data = "median_hilow", geom = "errorbar", 
+               fun.args = list(conf.int = 0.95), width = 0.2, size = 1.5) +
+  stat_summary(fun = "median", geom = "point", size = 5, color = "white") +
+  labs(
+    title = "Posterior Differences in Expected CSHQ Subscale Totals (ASD - Non-ASD)",
+    x = "CSHQ Subscales",
+    y = "Differences in Expected Total"
+  ) +
+  theme_classic(base_size = 16) +  # Global base font size
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 16),     
+    axis.text.y = element_text(size = 14),                                
+    axis.title = element_text(size = 18),                               
+    legend.position = "none",
+    plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),  
+    plot.margin = margin(20, 20, 20, 20)                                
+  ) +
+  scale_fill_brewer(palette = "Dark2")
+
+
+ggsave(
+  filename = "./CSHQ_plots/boxplot_expected_CSHQ_subscale_total_difference.png",
+  plot = boxplot_expected_CSHQ_subscale_total_difference,
+  width = 16, height = 9, units = "in",
+  dpi = 600
+)
+
+ggsave(
+  filename = "./CSHQ_plots/boxplot_expected_CSHQ_subscale_total_difference.pdf",
+  plot = boxplot_expected_CSHQ_subscale_total_difference,
+  width = 16, height = 9
+)
+
+
+
+
+
+
+#Plotting the predictive pmfs derived from item probabilities and regression coefficients
+#along with stacked plots for group membership, and specified quantile based CI for each score.
+
+combined_plot_density_predictive_T_autozoom_80_CI <- plot_combined_predictive_T(
+  theta = CSHQ_LCR_varsel$itemprob,
+  beta = CSHQ_ASD_beta_estimate_varsel_with_intercept,
+  theta_samples = theta_samples_collapsed_estimate_perm,
+  beta_samples = CSHQ_LCR_varsel$samples$beta_samples[c(1,4),,],
+  auto_ylim = TRUE,
+  ci_level = 0.80
+)
+
+combined_plot_density_predictive_T_autozoom_90_CI <- plot_combined_predictive_T(
+  theta = CSHQ_LCR_varsel$itemprob,
+  beta = CSHQ_ASD_beta_estimate_varsel_with_intercept,
+  theta_samples = theta_samples_collapsed_estimate_perm,
+  beta_samples = CSHQ_LCR_varsel$samples$beta_samples[c(1,4),,],
+  auto_ylim = TRUE,
+  ci_level = 0.90
+)
+
+combined_plot_density_predictive_T_autozoom_95_CI <- plot_combined_predictive_T(
+  theta = CSHQ_LCR_varsel$itemprob,
+  beta = CSHQ_ASD_beta_estimate_varsel_with_intercept,
+  theta_samples = theta_samples_collapsed_estimate_perm,
+  beta_samples = CSHQ_LCR_varsel$samples$beta_samples[c(1,4),,],
+  auto_ylim = TRUE,
+  ci_level = 0.95
+)
+
+
+
+ggsave(
+  filename = "./CSHQ_plots/combined_plot_density_predictive_T_autozoom_80_CI.png",
+  plot = combined_plot_density_predictive_T_autozoom_80_CI,
+  width = 16, height = 9, units = "in",
+  dpi = 600
+)
+
+ggsave(
+  filename = "./CSHQ_plots/combined_plot_density_predictive_T_autozoom_80_CI.pdf",
+  plot = combined_plot_density_predictive_T_autozoom_80_CI,
+  width = 16, height = 9
+)
+
+
+ggsave(
+  filename = "./CSHQ_plots/combined_plot_density_predictive_T_autozoom_90_CI.png",
+  plot = combined_plot_density_predictive_T_autozoom_90_CI,
+  width = 16, height = 9, units = "in",
+  dpi = 600
+)
+
+ggsave(
+  filename = "./CSHQ_plots/combined_plot_density_predictive_T_autozoom_90_CI.pdf",
+  plot = combined_plot_density_predictive_T_autozoom_90_CI,
+  width = 16, height = 9
+)
+
+
+ggsave(
+  filename = "./CSHQ_plots/combined_plot_density_predictive_T_autozoom_95_CI.png",
+  plot = combined_plot_density_predictive_T_autozoom_95_CI,
+  width = 16, height = 9, units = "in",
+  dpi = 600
+)
+
+ggsave(
+  filename = "./CSHQ_plots/combined_plot_density_predictive_T_autozoom_95_CI.pdf",
+  plot = combined_plot_density_predictive_T_autozoom_95_CI,
+  width = 16, height = 9
+)
+
+
 
 
 

@@ -39,6 +39,6 @@ sim1_MD_LCR_fit_predsel <- LCR_Gibbs(X = sim1_MD_data$X, Y = sim1_MD_data$Y, G =
 
 set.seed(123)
 
-sim1_MD_LCR_fit_predsel <- LCR_Gibbs(X = sim1_MD_data$X, Y = sim1_MD_data$Y, G = 2, beta_prior_cov = diag(10^2,7), beta_prior_mean = rep(0,7), 
+sim1_MD_LCR_fit_varsel <- LCR_Gibbs(X = sim1_MD_data$X, Y = sim1_MD_data$Y, G = 2, beta_prior_cov = diag(10^2,7), beta_prior_mean = rep(0,7), 
                                      theta_hyperparam = 1, clust_var_prior = 0.5, item.sel = TRUE, cov.sel = TRUE, verbose = TRUE, 
                                      relabel = TRUE, n_samples = 5000, burnin = 1000, thinby = 10)

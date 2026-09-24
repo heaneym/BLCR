@@ -1,15 +1,15 @@
-# ---- CSHQ Sleep Patterns Data ----
+# CSHQ Sleep Patterns Data 
 
 cat("\n=============================\n")
 cat("Running CSHQ analysis\n")
 cat("=============================\n\n")
 
-# ---- Read data ----
+# Read data 
 CSHQ_df <- read.csv(file.path("data", "CSHQ_df.csv"))
 Y_CSHQ <- as.matrix(read.csv(file.path("data", "CSHQ_response_Y.csv")))
 X_CSHQ <- as.matrix(read.csv(file.path("data", "CSHQ_predictor_X.csv")))[,-1]
 
-# ---- Collapsed model-selection run ----
+# Collapsed model-selection run 
 set.seed(134)
 
 CSHQ_preliminary_collapsed_run <- blca.collapsed(
@@ -67,7 +67,7 @@ CSHQ_cluster_95_cred_ball <- credibleball(
   alpha = 0.05
 )
 
-# ---- Fixed 4-group LCA comparison ----
+#Fixed 4-group LCA comparison
 CSHQ_preliminary_4group_LCA <- blca.collapsed(
   X = Y_CSHQ,
   G = 4,
@@ -118,7 +118,7 @@ write.csv(
   row.names = FALSE
 )
 
-# ---- LCR with item selection ----
+# LCR with item selection
 set.seed(136)
 
 CSHQ_LCR_itemsel <- LCR_Gibbs(
@@ -174,7 +174,7 @@ CSHQ_itemsel_minVI_cluster <- minVI(
   start.cl = max.col(CSHQ_LCR_itemsel$Z)
 )
 
-# ---- LCR with predictor selection ----
+# LCR with predictor selection
 set.seed(137)
 
 CSHQ_LCR_predsel <- LCR_Gibbs(
@@ -207,7 +207,7 @@ write.csv(
   row.names = FALSE
 )
 
-# ---- LCR with simultaneous variable selection ----
+#LCR with simultaneous variable selection
 set.seed(138)
 
 CSHQ_LCR_varsel <- LCR_Gibbs(
@@ -287,7 +287,7 @@ write.csv(
   row.names = FALSE
 )
 
-# ---- Mosaic plots for BLCR retained items ----
+# Mosaic plots for BLCR retained items
 cb_palette_mosaic <- c(
   "Response 1" = "#0072B2",
   "Response 2" = "#E69F00",
@@ -401,7 +401,7 @@ ggsave(
   height = 13.5
 )
 
-# ---- Standardised BLCR profile plot ----
+#Standardised BLCR profile plot
 Y_CSHQ_reduced <- Y_CSHQ[, which(CSHQ_LCR_varsel$item.ind == 1)]
 
 CSHQ_LCR_profiles <- compute_cshq_profiles(
@@ -432,7 +432,7 @@ ggsave(
   height = 5
 )
 
-# ---- ASD-only coefficient summary and stacked ridgeline ----
+# ASD-only coefficient summary and stacked ridgelin
 ASD_beta_coeff_samples_varsel <- CSHQ_LCR_varsel$samples$beta_samples[4, , , drop = FALSE]
 ASD_beta_coeff_samples_varsel_with_intercept <- CSHQ_LCR_varsel$samples$beta_samples[c(1, 4), , , drop = FALSE]
 
@@ -559,7 +559,7 @@ ggsave(
   height = 3.75
 )
 
-# ---- ASD-effect visualisations ----
+# ASD-effect visualisation
 theta_samples_collapsed_estimate <- compute_theta_samples_from_counts(
   N_gjk_samples = CSHQ_LCR_varsel$samples$N_gjk_samples,
   N_g_samples = CSHQ_LCR_varsel$samples$N_g_samples

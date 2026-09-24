@@ -4,7 +4,8 @@ LCR_Gibbs <- function(X, Y, G,
                       item.sel = FALSE, cov.sel = FALSE, 
                       verbose = FALSE, relabel = TRUE,
                       n_samples = 1000, burnin = 500, 
-                      thinby = 1){
+                      thinby = 1,
+                      sfm = FALSE, sparse_prior = 1/G, sparse_sigma_MH = 0.1){
   args <- match.call()
   if (is.data.frame(X)) {
     X <- as.matrix(X)
@@ -31,6 +32,9 @@ LCR_Gibbs <- function(X, Y, G,
                                           w = w, z = z, theta = theta, gamma = gamma, N_g = N_g,
                                           N_gjk = N_gjk, nu = nu, Y)
   list2env(sample_arrays, envir = environment())
+  G_eff_samples <- numeric(n_samples) 
+  sparse_weights_accept <- 0   
+  if (sfm) relabel <- FALSE
   sample_count <- 0
   start_time <- Sys.time()
   progress_interval <- 500
@@ -68,8 +72,24 @@ LCR_Gibbs <- function(X, Y, G,
     A <- A_update(kappa = kappa, omega = omega, C = C, G = G)
     gamma_up <- gamma_update(gamma = gamma, p = p, beta_prior_cov_inv = beta_prior_cov_inv, beta_prior_mean = beta_prior_mean, kappa = kappa, G = G, omega = omega, tau = tau, X = X, A = A, beta_mean = beta_mean, beta_cov_inv = beta_cov_inv, X_current = X_current)
     list2env(gamma_up, envir = environment())
-    beta_up <- beta_update(gamma = gamma , X_current = X_current, G = G, p = p, beta_prior_cov_inv = beta_prior_cov_inv , A = A, beta_prior_mean = beta_prior_mean , omega = omega)
-    list2env(beta_up, envir = environment())
+    if (sfm) {
+      beta_up <- beta_update_sfm(beta = beta, X_current = X_current, G = G, p = p,
+                                 beta_prior_cov_inv = beta_prior_cov_inv, A = A,
+                                 beta_prior_mean = beta_prior_mean, omega = omega)
+      list2env(beta_up, envir = environment())
+      mu   <- mu_update(X = X_current, beta = beta)    
+      sparse_weights_up <- sparse_weights_update(beta = beta, mu = mu, z = z, G = G, sparse_prior = sparse_prior, sparse_sigma_MH = sparse_sigma_MH, n = n)
+      beta <- sparse_weights_up$beta
+      sparse_weights_accept <- sparse_weights_accept + sparse_weights_up$accepted
+      if (count <= burnin)   #adaptive update for weight tuning                            
+        #sparse_sigma_MH <- exp(log(sparse_sigma_MH) + (sparse_weights_up$accepted - 0.30) / sqrt(count))
+        sparse_sigma_MH <- exp(log(sparse_sigma_MH) + (sparse_weights_up$accept_prob - 0.30) / sqrt(count))
+    } else {
+      beta_up <- beta_update(gamma = gamma, X_current = X_current, G = G, p = p,
+                             beta_prior_cov_inv = beta_prior_cov_inv, A = A,
+                             beta_prior_mean = beta_prior_mean, omega = omega)
+      list2env(beta_up, envir = environment())
+    }
     log_post_params <- list(
       mu = mu, Y_indicator = Y_indicator, 
       log_theta = log_theta, z = z, 
@@ -97,6 +117,7 @@ LCR_Gibbs <- function(X, Y, G,
       log_post_samples[sample_count] <- log_post
       log_like_samples[sample_count] <- log_like
       Y_imputed_samples[,,sample_count] <- Y_current
+      G_eff_samples[sample_count] <- sum(colSums(z) > 0)
     }
     if (verbose && count %% progress_interval == 0 && count > burnin) {
       elapsed <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
@@ -112,6 +133,7 @@ LCR_Gibbs <- function(X, Y, G,
                       bar, percent, sample_count, n_samples, est_remaining)
       cat(sprintf("%-*s", 80, line))  
       flush.console()
+      print(sum(colSums(z) > 0))
     }
   }
   if (verbose) {
@@ -124,7 +146,7 @@ LCR_Gibbs <- function(X, Y, G,
     relabelled_samples <- relabel_outputs(beta_samples = beta_samples, z_samples = z_samples, w_samples = w_samples, theta_samples = theta_samples, N_g_samples = N_g_samples, N_gjk_samples = N_gjk_samples, n_samples = n_samples, n = n, G = G)
     list2env(relabelled_samples, envir = environment())
   }
-  
+  gating <- extract_gating(beta_samples = beta_samples, G = G)
   
   post_process <- LCR_post_process(N_g_samples = N_g_samples,
                                    z_samples = z_samples,
@@ -202,6 +224,17 @@ LCR_Gibbs <- function(X, Y, G,
   result$Y_missing_indicator <- Y_missing_indicator
   result$Y <- Y
   result$X <- X
+  
+  result$G_eff_samples <- G_eff_samples
+  result$G_eff_posterior <- summarise_G_eff(N_g_samples, n)
+  result$sparse_weights_accept_rate <- sparse_weights_accept/n_iter
+  
+  
+  
+  result$gating_intercepts <- gating$intercept_samples   
+  result$gating_slopes     <- gating$slope_samples       
+  result$weights           <- gating$weight_samples      
+  result$weight_profile    <- gating$weight_ordered_mean
   
   return(result)
 }

@@ -16,6 +16,8 @@ source("./LCR_uncollapsed_functions.R")
 source("./LCR_gamma_update.R")
 #source general functions
 source("./LCR_general_functions.R")
+#source overfitted mixture functions
+source("./LCR_overfitted_mixture_functions.R")
 #source post processing functions
 source("./LCR_post_process.R")
 #source relabelling functions

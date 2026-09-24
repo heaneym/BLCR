@@ -1,4 +1,4 @@
-# ---- Simulation Study 1 ----
+# Simulation Study 1 
 
 cat("\n=============================\n")
 cat("Running Simulation Study 1\n")
@@ -53,7 +53,7 @@ write.csv(
 )
 
 
-# ---- LCR fit without variable selection ----
+# LCR fit without variable selection
 set.seed(125)
 
 sim1_LCR_fit_no_varsel <- LCR_Gibbs(
@@ -84,7 +84,7 @@ write.csv(
   row.names = FALSE
 )
 
-# ---- Simulation 1 beta ridgeline plot ----
+# Simulation 1 beta ridgeline plot 
 sim1_beta_samples <- sim1_LCR_fit_no_varsel$samples$beta_samples[, 2, ]
 sim1_beta_names <- paste0("beta", 0:6)
 
@@ -120,7 +120,7 @@ ggsave(
   height = 3.5
 )
 
-# ---- No-selection clustering summary ----
+# No-selection clustering summary 
 sim1_cluster_mat_no_varsel <- apply(
   sim1_LCR_fit_no_varsel$samples$z_samples,
   3,
@@ -155,7 +155,7 @@ write.csv(
   row.names = FALSE
 )
 
-# ---- LCR fit with item selection ----
+# LCR fit with item selection
 set.seed(126)
 
 sim1_LCR_fit_itemsel <- LCR_Gibbs(
@@ -240,7 +240,7 @@ write.csv(
   row.names = FALSE
 )
 
-# ---- LCR fit with predictor selection ----
+# LCR fit with predictor selection
 set.seed(127)
 
 sim1_LCR_fit_covsel <- LCR_Gibbs(
@@ -278,7 +278,7 @@ write.csv(
   row.names = FALSE
 )
 
-# ---- LCR fit with simultaneous variable selection ----
+# LCR fit with simultaneous variable selection
 
 set.seed(128)
 

@@ -2278,7 +2278,7 @@ for(group in groups_order) {
 
 y_labels <- rev(y_labels)
 
-final_combined_ridgeline_plot_CSHQ_itemsel <- ggplot(combined_beta_data, aes(x = Value, y = Parameter_Group, fill = Group)) +
+CSHQ_itemsel <- ggplot(combined_beta_data, aes(x = Value, y = Parameter_Group, fill = Group)) +
   geom_density_ridges(
     quantile_lines = TRUE,
     quantiles = c(0.025, 0.5, 0.975),
@@ -3396,6 +3396,24 @@ combined_plot_density_predictive_T_autozoom_95_CI <- plot_combined_predictive_T(
 )
 
 
+#Creating a plot with the labels changed to neurodiverse and neurotypical
+
+combined_plot_density_predictive_T_autozoom_95_CI_label_change <- plot_combined_predictive_T_label_change(
+  theta = CSHQ_LCR_varsel$itemprob,
+  beta = CSHQ_ASD_beta_estimate_varsel_with_intercept,
+  theta_samples = theta_samples_collapsed_estimate_perm[,,,],
+  beta_samples = CSHQ_LCR_varsel$samples$beta_samples[c(1,4),,],
+  auto_ylim = TRUE,
+  ci_level = 0.95,
+  main_title = 'Posterior Predictive Distributions of Total CSHQ Score by Neurotype',
+  plot_headings = c('Neurotypical', 'Neurodivergent'),
+  legend_title = 'Neurotype'
+)
+
+
+
+
+
 
 ggsave(
   filename = "./CSHQ_plots/combined_plot_density_predictive_T_autozoom_80_CI.png",
@@ -3440,7 +3458,11 @@ ggsave(
 
 
 
-
+ggsave(
+  filename = "./CSHQ_plots/combined_plot_density_predictive_T_autozoom_95_CI_label_change.pdf",
+  plot = combined_plot_density_predictive_T_autozoom_95_CI_label_change,
+  width = 16, height = 9
+)
 
 
 

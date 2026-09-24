@@ -68,8 +68,8 @@ N_updates <- function(z, Y_indicator, Y_missing_indicator, N_jk, nu){
 
   return(list(
     N_g = N_g, 
-    N_gjk = as.vector(N_gjk_array),  # Vector for C++
-    N_gjk_array = N_gjk_array        # Array for R functions
+    N_gjk = as.vector(N_gjk_array),  
+    N_gjk_array = N_gjk_array       
   ))
 }
 

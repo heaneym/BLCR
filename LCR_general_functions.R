@@ -29,6 +29,7 @@ C_update <- function(mu, exp_mu, G, C) {
 
 
 
+
 kappa_update <- function(z){
   return(z - 1/2)
 }

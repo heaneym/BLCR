@@ -38,10 +38,10 @@ LCR_collapsed_log_post_compute <- function(beta, beta_prior_cov_inv, beta_prior_
   term5 <- G*sum(lgamma(K_current*theta_hyperparam))
   term6 <- G*sum(K_current*lgamma(theta_hyperparam))
   term7 <- sum(lgamma(N_gjk_current + theta_hyperparam))
-  term8 <- sum_current_indices*sum(lgamma(N_g+theta_hyperparam))
+  term8 <- sum(outer(N_g, K_current, function(Ng, Kj) lgamma(Ng + Kj * theta_hyperparam)))
   log_like_term2 <- term5 - term6 + term7 - term8
   log_like <- log_like_term1 + log_like_term2
-  log_post <- log_like + beta_prior_term + nu_prior_term + logit_term
+  log_post <- log_like + beta_prior_term + nu_prior_term + logit_term 
   return(list(log_like = log_like, log_post = log_post))
 }
 

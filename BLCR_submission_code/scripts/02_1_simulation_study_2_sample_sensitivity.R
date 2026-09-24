@@ -1,5 +1,5 @@
-# ---- Simulation 2 subsample sensitivity analysis ----
-# Uses pre-saved exact subsample indices for exact reproducibility.
+# Simulation 2 subsample sensitivity analysis 
+# Uses pre-saved exact subsample indices for reproducibility.
 
 cat("\n===============================================\n")
 cat("Running Simulation 2 subsample study\n")

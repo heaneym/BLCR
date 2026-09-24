@@ -2,7 +2,7 @@
 #include <RcppArmadillo.h>
 using namespace Rcpp;
 
-
+// [[Rcpp::export]]
 List z_update_uncollapsed(arma::mat log_logit_probs, arma::cube log_theta, 
                            arma::mat Y, arma::umat Y_missing_indicator,
                            int G, int n, int M, IntegerVector K) {

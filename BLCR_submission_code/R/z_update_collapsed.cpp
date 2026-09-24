@@ -6,6 +6,13 @@
 using namespace Rcpp;
 
 
+#include <Rcpp.h>
+#include <cmath>
+#include <algorithm>
+#include <Rmath.h>
+using namespace Rcpp;
+
+// [[Rcpp::export]]
 IntegerVector sample_multinom_rmath(NumericVector probs) {
   int k = probs.size();
   IntegerVector out(k);
@@ -13,7 +20,7 @@ IntegerVector sample_multinom_rmath(NumericVector probs) {
   return out;
 } 
 
-
+// [[Rcpp::export]]
 List z_update_collapsed(IntegerMatrix z, 
                         IntegerVector nu,
                         NumericMatrix mu,
@@ -173,8 +180,6 @@ List z_update_collapsed(IntegerMatrix z,
     Named("N_gjk") = N_gjk_flat
   );
 }
-
-
 
 
 

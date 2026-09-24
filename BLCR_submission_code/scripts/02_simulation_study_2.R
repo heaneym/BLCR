@@ -1,10 +1,10 @@
-# ---- Simulation Study 2 ----
+# Simulation Study 2
 
 cat("\n=============================\n")
 cat("Running Simulation Study 2\n")
 cat("=============================\n\n")
 
-# ---- Setup ----
+#Setup 
 G <- 3
 p <- 6
 M <- 13
@@ -36,12 +36,12 @@ sim2_theta <- list(
   sim2_theta11, sim2_theta12, sim2_theta13
 )
 
-# ---- Simulate data ----
+# Simulate data
 set.seed(129)
 sim2_data <- LCR_sim_data(theta = sim2_theta, beta = sim2_beta, n_samples = 500)
 sim2_truelabels <- sim2_data$class
 
-# ---- True-parameter benchmark ----
+# True-parameter clustering results 
 true_posterior_cluster_probs_sim2 <- LCR_posterior_membership_prob(
   theta = sim2_theta,
   beta = cbind(sim2_beta, 0),
@@ -62,7 +62,7 @@ write.csv(
   row.names = FALSE
 )
 
-# ---- LCR fit without variable selection ----
+#LCR fit without variable selection
 set.seed(131)
 
 sim2_LCR_fit_no_varsel <- LCR_Gibbs(
@@ -118,7 +118,7 @@ write.csv(
   file.path("output", "tables", "sim2_cross_classification_no_varsel.csv")
 )
 
-# ---- LCR fit with item selection ----
+# LCR fit with item selection
 set.seed(132)
 
 sim2_LCR_fit_itemsel <- LCR_Gibbs(
@@ -174,7 +174,7 @@ write.csv(
   row.names = FALSE
 )
 
-# ---- Simulation 2 combined beta ridgeline plot ----
+#Simulation 2 combined beta ridgeline plot 
 sim2_beta1_samples <- relevelled_beta_samples[, 2, ]
 sim2_beta2_samples <- relevelled_beta_samples[, 1, ]
 sim2_beta_names <- paste0("beta", 0:6)
@@ -229,7 +229,7 @@ ggsave(
   height = 10
 )
 
-# ---- Item-selection clustering summary ----
+#Item-selection clustering summary 
 sim2_cluster_mat_itemsel <- apply(
   sim2_LCR_fit_itemsel$samples$z_samples,
   3,
@@ -264,7 +264,7 @@ write.csv(
   row.names = FALSE
 )
 
-# ---- LCR fit with predictor selection ----
+# LCR fit with predictor selection
 set.seed(133)
 
 sim2_LCR_fit_covsel <- LCR_Gibbs(
@@ -302,8 +302,8 @@ write.csv(
   row.names = FALSE
 )
 
-# ---- LCR fit with simultaneous variable selection ----
-# Kept as a single main fit only; repeated subsample fits removed from the submission script.
+# LCR fit with simultaneous variable selection 
+
 set.seed(128)
 
 sim2_LCR_fit_varsel <- LCR_Gibbs(

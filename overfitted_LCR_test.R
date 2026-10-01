@@ -109,7 +109,18 @@ CSHQ_data_test_fit_overfitted <- LCR_Gibbs(X = X_CSHQ, Y = Y_CSHQ, G = 12,
                                            n_samples = 5000, burnin = 5000,
                                            verbose = TRUE)
 
+#Running Wade and Ghahramani clustering on this
 
+
+g_vec_samples <- apply(CSHQ_data_test_fit_overfitted$samples$z_samples, c(1,3), which.max)
+
+psm_mat_overfitted <- comp.psm(t(g_vec_samples))
+
+start_cl <- as.integer(factor(max.col(CSHQ_data_test_fit_overfitted$Z)))
+
+minVI_est_overfitted_wade <- minVI(psm = psm_mat_overfitted, method = 'greedy', start.cl = start_cl)
+
+minVI_est_overfitted_salso <- salso(t(g_vec_samples))
 
 
 

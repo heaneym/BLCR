@@ -47,6 +47,58 @@ sim1_item_sel_N500 <- item_var_sel_summarise(fit = sim1_results_N500,
                                              threshold = 0.5)
 
 
+# Want to output our desired quantities using xtable so we can put the tables directly into latex
+
+# We want coverage, bias, MSE for informative predictors and mean posterior inclusion for non-informative ones  
+
+beta_coverage_frame <- data.frame(
+  sample_sizes = c('N = 150', 'N = 300', 'N = 500', 'True Coefficient'),
+  intercept = c(sim1_beta_N150$conditional$mean_coverage[1,],
+                sim1_beta_N300$conditional$mean_coverage[1,],
+                sim1_beta_N500$conditional$mean_coverage[1,],
+                sim1_beta[1,]),
+  X_1 = c(sim1_beta_N150$conditional$mean_coverage[2,],
+          sim1_beta_N300$conditional$mean_coverage[2,],
+          sim1_beta_N500$conditional$mean_coverage[2,],
+          sim1_beta[2,]),
+  X_2 = c(sim1_beta_N150$conditional$mean_coverage[3,],
+          sim1_beta_N300$conditional$mean_coverage[3,],
+          sim1_beta_N500$conditional$mean_coverage[3,],
+          sim1_beta[3,]),
+  X_3 = c(sim1_beta_N150$conditional$mean_coverage[4,],
+          sim1_beta_N300$conditional$mean_coverage[4,],
+          sim1_beta_N500$conditional$mean_coverage[4,],
+          sim1_beta[4,]),
+  X_4 = c(sim1_beta_N150$conditional$mean_coverage[5,],
+          sim1_beta_N300$conditional$mean_coverage[5,],
+          sim1_beta_N500$conditional$mean_coverage[5,],
+          sim1_beta[5,])
+)
+
+beta_coverage_frame_uncond <- data.frame(
+  sample_sizes = c('N = 150', 'N = 300', 'N = 500', 'True Coefficient'),
+  intercept = c(sim1_beta_N150$unconditional$mean_coverage[1,],
+                sim1_beta_N300$unconditional$mean_coverage[1,],
+                sim1_beta_N500$unconditional$mean_coverage[1,],
+                sim1_beta[1,]),
+  X_1 = c(sim1_beta_N150$unconditional$mean_coverage[2,],
+          sim1_beta_N300$unconditional$mean_coverage[2,],
+          sim1_beta_N500$unconditional$mean_coverage[2,],
+          sim1_beta[2,]),
+  X_2 = c(sim1_beta_N150$unconditional$mean_coverage[3,],
+          sim1_beta_N300$unconditional$mean_coverage[3,],
+          sim1_beta_N500$unconditional$mean_coverage[3,],
+          sim1_beta[3,]),
+  X_3 = c(sim1_beta_N150$unconditional$mean_coverage[4,],
+          sim1_beta_N300$unconditional$mean_coverage[4,],
+          sim1_beta_N500$unconditional$mean_coverage[4,],
+          sim1_beta[4,]),
+  X_4 = c(sim1_beta_N150$unconditional$mean_coverage[5,],
+          sim1_beta_N300$unconditional$mean_coverage[5,],
+          sim1_beta_N500$unconditional$mean_coverage[5,],
+          sim1_beta[5,])
+)
+
 
 
 

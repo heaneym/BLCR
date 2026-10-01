@@ -3,7 +3,9 @@ library(BayesLogit)
 library(label.switching)
 library(einsum)
 library(Rcpp)
-setwd('C:/Users/matth/Documents/AIM CP Project/LCA/BLCR_and_var_sel')
+library(here)
+#setwd('C:/Users/matth/Documents/AIM CP Project/LCA/BLCR_and_var_sel')
+setwd(here())
 #source z_update functions
 source("./LCR_z_update.R")
 #source init function

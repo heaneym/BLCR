@@ -8,6 +8,7 @@ library(clue)
 library(HDInterval)  
 library(future.apply)
 library(progressr)
+library(MCMCpack)
 
 #Simulation study 1
 
@@ -377,7 +378,7 @@ plan(sequential)
 
 
 
-#Same thing for simulation 3 (NEW SIMULATION - TBC)
+#Same thing for simulation 3 
 
 G <- 4
 n <- 500
@@ -408,10 +409,10 @@ sim3_beta <- matrix(c(
   0,     0,    0, 
   1,     0,  1.5, 
   0,   0.1,  0.2, 
-  0,     0,  0.4, 
+  0,     0,  0.4 
 ), nrow = p+1, byrow = TRUE)
 
-#We let items 1-25 be informative with distinct parameters, and 25-50 non-informative
+#We let items 1-20 be informative with distinct parameters, and 21-40 non-informative
 
 sim3_theta1 <- matrix(c(
   0.4, 0.3, 0.3,
@@ -553,69 +554,32 @@ sim3_theta20 <- matrix(c(
   0.45, 0.35, 0.2
 ), nrow = G, ncol = 3, byrow = TRUE)
 
-sim3_theta21 <- matrix(c(
-  0.55, 0.3, 0.15,
-  0.55, 0.25, 0.2,
-  0.1, 0.3, 0.6,
-  0.65, 0.2, 0.15
-), nrow = G, ncol = 3, byrow = TRUE)
 
-sim3_theta22 <- matrix(c(
-  0.5, 0.35, 0.15,
-  0.55, 0.3, 0.15,
-  0.4, 0.35, 0.25,
-  0.6, 0.25, 0.15
-), nrow = G, ncol = 3, byrow = TRUE)
-
-sim3_theta23 <- matrix(c(
-  0.5, 0.3, 0.2,
-  0.5, 0.3, 0.2,
-  0.15, 0.25, 0.6,
-  0.7, 0.2, 0.1
-), nrow = G, ncol = 3, byrow = TRUE)
-
-sim3_theta24 <- matrix(c(
-  0.55, 0.25, 0.2,
-  0.5, 0.3, 0.2,
-  0.45, 0.3, 0.25,
-  0.45, 0.35, 0.2
-), nrow = G, ncol = 3, byrow = TRUE)
-
-sim3_theta25 <- matrix(c(
-  0.5, 0.3, 0.2,
-  0.55, 0.25, 0.2,
-  0.4, 0.35, 0.25,
-  0.65, 0.2, 0.15
-), nrow = G, ncol = 3, byrow = TRUE)
 
 
 
 #Non-informative variables 
-sim3_theta26 <- matrix(rep(c(0.5,0.4,0.1),G), nrow = G, ncol = 3, byrow = TRUE)
-sim3_theta27 <- matrix(rep(c(0.3,0.1,0.6),G), nrow = G, ncol = 3, byrow = TRUE)
-sim3_theta28 <- matrix(rep(c(0.5, 0.2, 0.3),G), nrow = G, ncol = 3, byrow = TRUE)
-sim3_theta29 <- matrix(rep(c(0.2, 0.05, 0.75),G), nrow = G, ncol = 3, byrow = TRUE)
-sim3_theta30 <- matrix(rep(c(0.7, 0.05, 0.25),G), nrow = G, ncol = 3, byrow = TRUE)
-sim3_theta31 <- matrix(rep(c(0.25, 0.5, 0.25),G), nrow = G, ncol = 3, byrow = TRUE)
-sim3_theta32 <- matrix(rep(c(0.2, 0.3, 0.5),G), nrow = G, ncol = 3, byrow = TRUE)
-sim3_theta33 <- matrix(rep(c(0.6, 0.2, 0.2),G), nrow = G, ncol = 3, byrow = TRUE)
-sim3_theta34 <- matrix(rep(c(0.7, 0.1, 0.2),G), nrow = G, ncol = 3, byrow = TRUE)
-sim3_theta35 <- matrix(rep(c(0.65, 0.15, 0.2),G), nrow = G, ncol = 3, byrow = TRUE)
-sim3_theta36 <- matrix(rep(c(0.15, 0.2, 0.65),G), nrow = G, ncol = 3, byrow = TRUE)
-sim3_theta37 <- matrix(rep(c(0.45, 0.25, 0.3),G), nrow = G, ncol = 3, byrow = TRUE)
-sim3_theta38 <- matrix(rep(c(0.05, 0.35, 0.6),G), nrow = G, ncol = 3, byrow = TRUE)
-sim3_theta39 <- matrix(rep(c(0.85, 0.1, 0.05),G), nrow = G, ncol = 3, byrow = TRUE)
-sim3_theta40 <- matrix(rep(c(0.1, 0.35, 0.55),G), nrow = G, ncol = 3, byrow = TRUE)
-sim3_theta41 <- matrix(rep(c(0.3, 0.67, 0.03),G), nrow = G, ncol = 3, byrow = TRUE)
-sim3_theta42 <- matrix(rep(c(0.8, 0.1, 0.1),G), nrow = G, ncol = 3, byrow = TRUE)
-sim3_theta43 <- matrix(rep(c(1/G, 1/G, 1/G),G), nrow = G, ncol = 3, byrow = TRUE)
-sim3_theta44 <- matrix(rep(c(0.1, 0.5, 0.4),G), nrow = G, ncol = 3, byrow = TRUE)
-sim3_theta45 <- matrix(rep(c(0.4, 0.3, 0.3),G), nrow = G, ncol = 3, byrow = TRUE)
-sim3_theta46 <- matrix(rep(c(0.5, 0.2, 0.3),G), nrow = G, ncol = 3, byrow = TRUE)
-sim3_theta47 <- matrix(rep(c(0.1, 0.8, 0.1),G), nrow = G, ncol = 3, byrow = TRUE)
-sim3_theta48 <- matrix(rep(c(0.9, 0.05, 0.05),G), nrow = G, ncol = 3, byrow = TRUE)
-sim3_theta49 <- matrix(rep(c(0.1, 0.05, 0.85),G), nrow = G, ncol = 3, byrow = TRUE)
-sim3_theta50 <- matrix(rep(c(0.99,0.005,0.005),G), nrow = G, ncol = 3, byrow = TRUE)
+sim3_theta21 <- matrix(rep(c(0.5,0.4,0.1),G), nrow = G, ncol = 3, byrow = TRUE)
+sim3_theta22 <- matrix(rep(c(0.5,0.4,0.1),G), nrow = G, ncol = 3, byrow = TRUE)
+sim3_theta23 <- matrix(rep(c(0.3,0.1,0.6),G), nrow = G, ncol = 3, byrow = TRUE)
+sim3_theta24 <- matrix(rep(c(0.5, 0.2, 0.3),G), nrow = G, ncol = 3, byrow = TRUE)
+sim3_theta25 <- matrix(rep(c(0.2, 0.05, 0.75),G), nrow = G, ncol = 3, byrow = TRUE)
+sim3_theta26 <- matrix(rep(c(0.7, 0.05, 0.25),G), nrow = G, ncol = 3, byrow = TRUE)
+sim3_theta27 <- matrix(rep(c(0.25, 0.5, 0.25),G), nrow = G, ncol = 3, byrow = TRUE)
+sim3_theta28 <- matrix(rep(c(0.2, 0.3, 0.5),G), nrow = G, ncol = 3, byrow = TRUE)
+sim3_theta29 <- matrix(rep(c(0.6, 0.2, 0.2),G), nrow = G, ncol = 3, byrow = TRUE)
+sim3_theta30 <- matrix(rep(c(0.7, 0.1, 0.2),G), nrow = G, ncol = 3, byrow = TRUE)
+sim3_theta31 <- matrix(rep(c(0.65, 0.15, 0.2),G), nrow = G, ncol = 3, byrow = TRUE)
+sim3_theta32 <- matrix(rep(c(0.15, 0.2, 0.65),G), nrow = G, ncol = 3, byrow = TRUE)
+sim3_theta33 <- matrix(rep(c(0.45, 0.25, 0.3),G), nrow = G, ncol = 3, byrow = TRUE)
+sim3_theta34 <- matrix(rep(c(0.05, 0.35, 0.6),G), nrow = G, ncol = 3, byrow = TRUE)
+sim3_theta35 <- matrix(rep(c(0.85, 0.1, 0.05),G), nrow = G, ncol = 3, byrow = TRUE)
+sim3_theta36 <- matrix(rep(c(0.1, 0.35, 0.55),G), nrow = G, ncol = 3, byrow = TRUE)
+sim3_theta37 <- matrix(rep(c(0.3, 0.67, 0.03),G), nrow = G, ncol = 3, byrow = TRUE)
+sim3_theta38 <- matrix(rep(c(0.8, 0.1, 0.1),G), nrow = G, ncol = 3, byrow = TRUE)
+sim3_theta39 <- matrix(rep(c(1/G, 1/G, 1/G),G), nrow = G, ncol = 3, byrow = TRUE)
+sim3_theta40 <- matrix(rep(c(0.1, 0.5, 0.4),G), nrow = G, ncol = 3, byrow = TRUE)
+
 
 
 sim3_theta <- list(
@@ -658,27 +622,17 @@ sim3_theta <- list(
   sim3_theta37,
   sim3_theta38,
   sim3_theta39,
-  sim3_theta40,
-  sim3_theta41,
-  sim3_theta42,
-  sim3_theta43,
-  sim3_theta44,
-  sim3_theta45,
-  sim3_theta46,
-  sim3_theta47,
-  sim3_theta48,
-  sim3_theta49,
-  sim3_theta50
+  sim3_theta40
 )
 
 
 
 
-
-true_item_active <- c(rep(TRUE, 25), rep(FALSE, 25))  
+true_item_active <- c(rep(TRUE, 20), rep(FALSE, 20))  
 true_pred_active <- rep(TRUE, 5)               
 
-n_replicates <- 300
+#We'll try with 100 replicates for the moment and will see about scaling up later on
+n_replicates <- 100
 
 #Simulating datasets
 
@@ -772,39 +726,7 @@ for (nm in names(sample_sizes)) {
       future.seed = TRUE
     )
   })
-  
-  # Put the results from each replicate into the existing arrays
-  
-  # for (t in 1:n_replicates) {
-  #   
-  #   summ <- results[[t]]
-  #   
-  #   sim1_results[[nm]]$beta$coverage[, , t] <- summ$beta_cov
-  #   sim1_results[[nm]]$beta$bias[, , t] <- summ$beta_bias
-  #   sim1_results[[nm]]$beta$mse[, , t] <- summ$beta_mse
-  #   
-  #   for (m in 1:M) {
-  #     sim1_results[[nm]]$theta$coverage[[m]][, , t] <-
-  #       summ$theta_cov[[m]]
-  #     
-  #     sim1_results[[nm]]$theta$bias[[m]][, , t] <-
-  #       summ$theta_bias[[m]]
-  #     
-  #     sim1_results[[nm]]$theta$mse[[m]][, , t] <-
-  #       summ$theta_mse[[m]]
-  #   }
-  #   
-  #   sim1_results[[nm]]$item_sel$pip[, t] <- summ$item_pip
-  #   sim1_results[[nm]]$item_sel$indicator[, t] <-
-  #     summ$item_pip > 0.5
-  #   
-  #   sim1_results[[nm]]$pred_sel$pip[, t] <- summ$pred_pip
-  #   sim1_results[[nm]]$pred_sel$indicator[, t] <-
-  #     summ$pred_pip > 0.5
-  # }
-  
-  #Updated code computes coverage, bias, MSE for the iterations for all iterations 
-  #as well as those where a variable is included
+
   for (t in 1:n_replicates) {
     summ <- results[[t]]
     

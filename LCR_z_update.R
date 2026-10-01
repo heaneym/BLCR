@@ -9,7 +9,7 @@
 #   return(list(w = w, z = z))
 # }
 
-setwd('C:/Users/matth/Documents/AIM CP Project/LCA/BLCR_and_var_sel')
+setwd(here())
 
 sourceCpp("z_update_collapsed.cpp")
 sourceCpp("z_update_uncollapsed.cpp")

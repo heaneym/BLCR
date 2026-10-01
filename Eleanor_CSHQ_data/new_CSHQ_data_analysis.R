@@ -3,11 +3,13 @@ library(mcclust.ext)
 library(pheatmap)
 library(misty)
 library(mclust)
+library(Hmisc)
 library(viridis)
 library(mclust)
 library(FSA)
 library(car)
 library(mice)
+library(GGally)
 source('./LCR_Gibbs.R')
 
 ord <- c("BR1", "BR2", "BR3", "BR5",

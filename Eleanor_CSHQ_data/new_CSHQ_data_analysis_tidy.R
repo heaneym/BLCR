@@ -52,20 +52,13 @@ cshq_colnames <- c("ID","BR1","BR2","SOD1","SD2","SD3","DS1","DS7","DS8",
                    "SDB1","SDB2","SDB3","DS2","DS3","DS4","DS5","DS6")
 
 
-#clean_id <- function(x) gsub("\\s+", "", toupper(trimws(as.character(x))))
 
 
 
 
 
 
-
-
-
-
-
-
-
+#Function for cleaning up IDs so characters are upper case, no spaces, extra characters etc
 
 clean_id <- function(x) {
   x <- toupper(trimws(as.character(x)))
@@ -76,7 +69,7 @@ clean_id <- function(x) {
 }
 
 
-# ---- 2. cohort-specific recoding --------------------------------------
+# cohort specific recoding
 # This is to match some of the ID coding up between the datasets
 harmonise_id <- function(id, cohort) {
   id <- clean_id(id)
@@ -86,7 +79,7 @@ harmonise_id <- function(id, cohort) {
   i <- ch == "champion_NE" & grepl("^[0-9]+$", id) & !is.na(id)
   id[i] <- paste0("NE", id[i])
   
-  # serenity CP: THU is a transposition of TUH (TUH is correct)
+  # serenity CP: THU needs to be changed to TUH 
   i <- ch %in% c("serenity", "serenity_cp") & !is.na(id)
   id[i] <- sub("^THU", "TUH", id[i])
   
@@ -98,12 +91,7 @@ harmonise_id <- function(id, cohort) {
 }
 
 
-
-
-
-
-# ---- 4. report genuine within-file duplicates -------------------------
-
+# Function for finding duplicate values
 show_dups <- function(d, nm, value_cols) {
   k <- paste(d$cohort, d$ID_clean, sep = " | ")
   dk <- unique(k[duplicated(k)])
@@ -114,9 +102,7 @@ show_dups <- function(d, nm, value_cols) {
 }
 
 
-
-# ---- 5. collapse duplicates (run only after inspecting step 4) --------
-
+#Function for dropping duplicates
 mean_na <- function(x) if (all(is.na(x))) NA_real_ else mean(x, na.rm = TRUE)
 
 collapse_dups <- function(d, value_cols) {
@@ -126,12 +112,7 @@ collapse_dups <- function(d, value_cols) {
     as.data.frame()
 }
 
-# scores_all  <- collapse_dups(scores_all, c(subscale_names, "CSHQ_total"))
-# age_df      <- collapse_dups(age_df,     "age_months")
-# cyto_all    <- collapse_dups(cyto_all,   marker_raw)
-
-
-
+# Frame giving correspondence betwen cohorts, studies and groups
 cohort_meta <- data.frame(
   cohort = c("firefly_control", "firefly_NE",
              "champion_control", "champion_NE", "champion_CP",
@@ -149,18 +130,6 @@ cohort_meta <- data.frame(
 )
 
 
-# ---- 7. post-join check
-link_check <- function(data = master) {
-  data %>%
-    mutate(cshq = !is.na(CSHQ_total),
-           age  = !is.na(age_months),
-           cyt  = !is.na(EPO) | !is.na(EPO_LPS)) %>%
-    group_by(cohort) %>%
-    summarise(n = n(),
-              cshq = sum(cshq), age = sum(age), cyt = sum(cyt),
-              all_three = sum(cshq & age & cyt), .groups = "drop") %>%
-    as.data.frame()
-}
 
 
 
@@ -181,10 +150,7 @@ link_check <- function(data = master) {
 
 
 
-
-
-
-
+#Function for loading in the CSHQ data for a given cohort
 
 load_cshq_cohort <- function(path, col_idx, dataset, row_idx = NULL) {
   raw <- read.csv(path, stringsAsFactors = FALSE)
@@ -210,11 +176,11 @@ subscale_totals <- function(items_df) {
 }
 
 # Min/max proportion above a CSHQ cut-off given missingness (items score 1-3).
-prop_above_threshold <- function(Y, thresh = 41) {
-  score   <- rowSums(Y, na.rm = TRUE)
+prop_above_threshold <- function(Y, threshold = 41) {
+  score <- rowSums(Y, na.rm = TRUE)
   missing <- rowSums(is.na(Y))
-  c(min = mean((score + missing * 1) > thresh),
-    max = mean((score + missing * 3) > thresh))
+  c(min = mean((score + missing * 1) > threshold),
+    max = mean((score + missing * 3) > threshold))
 }
 
 
@@ -247,26 +213,23 @@ Y_full <- Y_full[keep, , drop = FALSE]
 rownames(data_full) <- rownames(Y_full) <- NULL
 
 
-# ---- age distributions -----------------------------------------------
+# Looking at age distribution
 # These totals files are only read for ages.
 firefly_control_tot <- read.csv(file.path(data_dir, "CSHQ_data_Eleanor_firefly_controls.csv"))
-firefly_NE_tot      <- read.csv(file.path(data_dir, "CSHQ_data_Eleanor_firefly_NE.csv"))
-serenity_tot        <- read.csv(file.path(data_dir, "CSHQ_data_Eleanor_serenity.csv"))
-starfish_raw        <- read.csv(file.path(data_dir, "starfish_preterm_followup_raw_CSHQ.csv"))
+firefly_NE_tot <- read.csv(file.path(data_dir, "CSHQ_data_Eleanor_firefly_NE.csv"))
+serenity_tot <- read.csv(file.path(data_dir, "CSHQ_data_Eleanor_serenity.csv"))
+starfish_raw <- read.csv(file.path(data_dir, "starfish_preterm_followup_raw_CSHQ.csv"))
 champion_CP_raw <- read.csv(file.path(data_dir, "CSHQ_data_Eleanor_champion_CP.csv"))
 
-## CHECK: serenity age units unconfirmed. serenity_age_scale = 1 treats the
-##        column as months; set to 0.230137 if it is actually in weeks.
+# change this scale depending on whether the age is in weeks or months, currently this is assuming it is in months
 serenity_age_scale <- 1
 
 ages <- list(
   "Firefly controls" = list(x = as.numeric(firefly_control_tot$X.1[3:22]), col = "lightblue"),
-  "Firefly NE"       = list(x = as.numeric(firefly_NE_tot$X.1[3:31]),      col = "lightgreen"),
-  "Starfish"         = list(x = starfish_raw$AGE..years. * 12,             col = "orange"),
-  "Serenity CP"         = list(x = as.numeric(serenity_tot$X.1[3:30]) * serenity_age_scale,
-                               col = "purple"),
-  "Champion CP"         = list(x = as.numeric(gsub(" YRS", "", champion_CP_raw$X.1[3:29])) * 12,
-                               col = "red")
+  "Firefly NE" = list(x = as.numeric(firefly_NE_tot$X.1[3:31]),      col = "lightgreen"),
+  "Starfish" = list(x = starfish_raw$AGE..years. * 12,             col = "orange"),
+  "Serenity CP" = list(x = as.numeric(serenity_tot$X.1[3:30]) * serenity_age_scale, col = "purple"),
+  "Champion CP" = list(x = as.numeric(gsub(" YRS", "", champion_CP_raw$X.1[3:29])) * 12, col = "red")
 )
 
 draw_age_hists <- function(ages) {
@@ -277,8 +240,7 @@ draw_age_hists <- function(ages) {
          ylab = "Density", col = ages[[nm]]$col, xlim = xr, probability = TRUE)
 }
 
-# Draw once per device. (The original nested pdf() then png(), which sent all
-# plotting to the PNG and left the PDF blank.)
+
 png(file.path(out_dir, "age_hist.png"), width = 1000, height = 800); draw_age_hists(ages); dev.off()
 pdf(file.path(out_dir, "age_hist.pdf"), width = 10, height = 8);     draw_age_hists(ages); dev.off()
 
@@ -291,12 +253,6 @@ firefly_control_age <- data.frame(
   age_months = as.numeric(firefly_control_tot$X.1[3:22])
 )
 
-# We have some issues with inconsistent coding to attach age with the firefly NE group
-# firefly_NE_age <- data.frame(
-#   cohort = "firefly_NE",
-#   ID = as.character(firefly_NE$ID),
-#   age_months = as.numeric(firefly_NE_tot$X.1[3:31])
-# )
 
 starfish_age <- data.frame(
   cohort = "starfish_preterm",
@@ -367,7 +323,6 @@ starfish_control_age <- data.frame(
 
 age_df <- bind_rows(
   firefly_control_age,
-  # firefly_NE_age,
   starfish_age,
   serenity_cp_age,
   champion_cp_age,
@@ -381,16 +336,13 @@ age_df$ID_clean <- gsub("\\s+", "", toupper(trimws(age_df$ID)))
 
 
 
+#I THINK THE BELOW HEATMAPS EXCLUDE THE CHAMPION_NE COHORT - TO BE MODIFIED (THESE MAY NOT BE SO IMPORTANT THOUGH)
 
-
-
-# ---- missingness + response heatmaps ---------------------------------
-gaps_col <- c(4, 5, 8, 12, 15, 22, 25, 33)   # subscale boundaries within `ord`
+# missingness & response heatmaps
+gaps_col <- c(4, 5, 8, 12, 15, 22, 25, 33)   # subscale boundaries 
 gaps_row <- c(20, 54, 75) # cohort boundaries
 
-# missingness (TRUE = missing). Simplified to is.na(): equivalent intent to the
-# original misty::na.indicator()[,34:66] slice, but dimension-safe, so misty is
-# no longer needed.
+# missingness 
 png(file.path(out_dir, "missingness_heatmap.png"), width = 1000, height = 800)
 pheatmap(is.na(Y_full) * 1,
          cluster_rows = FALSE, cluster_cols = FALSE,
@@ -400,6 +352,7 @@ pheatmap(is.na(Y_full) * 1,
          main = "Missing Indicator Heatmap")
 dev.off()
 
+#Response heatmap
 png(file.path(out_dir, "CSHQ_response_heatmap.png"), width = 1000, height = 800)
 pheatmap(Y_full, cluster_rows = FALSE, cluster_cols = FALSE,
          color = viridis(3), gaps_row = gaps_row, gaps_col = gaps_col,
@@ -408,7 +361,7 @@ pheatmap(Y_full, cluster_rows = FALSE, cluster_cols = FALSE,
 dev.off()
 
 
-# ---- cohort mean item-score heatmap ----------------------------------
+# cohort mean item-score heatmap
 cohort_item_mean <- t(sapply(split(as.data.frame(Y_full), data_full$dataset),
                              function(d) colMeans(d, na.rm = TRUE)))
 cohort_item_mean <- cohort_item_mean[c("firefly_control", "firefly_NE",
@@ -428,43 +381,43 @@ pheatmap(cohort_item_mean, display_numbers = round(cohort_item_mean, 2),
 dev.off()
 
 
-# ---- proportion above clinical cut-off (41) --------------------------
-keep_clean      <- rowSums(is.na(Y_full)) <= 16    # drop severe missingness
+#proportion above clinical cut-off (41)
+keep_clean <- rowSums(is.na(Y_full)) <= 16    # drop severe missingness
 data_full_clean <- data_full[keep_clean, , drop = FALSE]
-Y_full_clean    <- Y_full[keep_clean, , drop = FALSE]
+Y_full_clean <- Y_full[keep_clean, , drop = FALSE]
 
 prop_above_threshold(Y_full_clean)                                   # overall
 sapply(split(Y_full_clean, data_full_clean$dataset),                 # per cohort
        prop_above_threshold)
 
 
-# ---- champion cohorts (subscale / total only) ------------------------
+# champion cohorts (subscale / total only)
 # champion_NE: per-subscale totals provided.
 champion_NE_raw <- read.csv(file.path(data_dir, "CSHQ_data_Eleanor_champion_NE.csv"))
 champ_ne <- champion_NE_raw[3:55, c(1, 3:10)]
 colnames(champ_ne) <- c("ID", "BR", "SOD", "SD", "SA", "NW", "P", "SDB", "DS")
-champ_ne <- champ_ne[!is.na(champ_ne$BR), ]          # drop empty rows
-champ_ne$DS <- champ_ne$DS + 2                        # DS scoring offset (2 items)
-champ_ne$SD[champ_ne$SD == 0] <- NA                   # stray 0 -> treat as missing
+champ_ne <- champ_ne[!is.na(champ_ne$BR), ] # drop empty rows
+champ_ne$DS <- champ_ne$DS + 2 # DS scoring offset (2 items)
+champ_ne$SD[champ_ne$SD == 0] <- NA  # stray 0 - treating this as missing
 champ_ne <- complete(mice(champ_ne, method = "pmm", seed = 123, printFlag = FALSE))
 # Remove contributions the other cohorts don't have, assuming equal item weights:
-champ_ne$NW <- champ_ne$NW - champ_ne$NW / 3          # drop NW1-equivalent (NW has 3 items)
-champ_ne$BR <- champ_ne$BR - 2 * champ_ne$BR / 6      # drop 2 items shared with SA (BR has 6)
+champ_ne$NW <- champ_ne$NW - champ_ne$NW / 3 # drop NW1-equivalent (NW has 3 items)
+champ_ne$BR <- champ_ne$BR - 2 * champ_ne$BR / 6 # drop 2 items shared with SA (BR has 6)
 
 # champion_CP: only a CSHQ total provided.
 champion_CP_raw <- read.csv(file.path(data_dir, "CSHQ_data_Eleanor_champion_CP.csv"))
 champ_cp <- champion_CP_raw[3:21, c(1, 4)]
 colnames(champ_cp) <- c("ID", "total")
-champ_cp$total <- as.numeric(champ_cp$total) + 2       # scoring offset (2 items)
+champ_cp$total <- as.numeric(champ_cp$total) + 2 # scoring offset (2 items)
 champ_cp$total <- champ_cp$total - champ_cp$total / 33  # drop NW1-equivalent (33 items total)
 
 # champion_control: only a CSHQ total provided (for most of the observations)
 champion_control_raw <- read.csv(file.path(data_dir, "champion_control_CSHQ_data.csv"))
 champ_control <- champion_control_raw[, c(1, 5)]
 colnames(champ_control) <- c("ID", "total")
-champ_control$total <- as.numeric(champ_control$total) + 2       # scoring offset (2 items)
+champ_control$total <- as.numeric(champ_control$total) + 2 # scoring offset (2 items)
 champ_control$total <- champ_control$total - champ_control$total / 33  # drop NW1-equivalent (33 items total)
-champ_control$ID <- paste0("CON", champ_control$ID)
+champ_control$ID <- paste0("CON", champ_control$ID) #Fixing the ID values
 
 
 
@@ -516,10 +469,10 @@ scores_all <- bind_rows(sc_items, sc_champ_ne, sc_champ_cp, sc_champ_control)
 scores_all$cohort[scores_all$cohort == "serenity"] <- "serenity_cp"
 scores_all$ID <- harmonise_id(scores_all$ID, scores_all$cohort)
 
-scores_all$study    <- unname(study_of[scores_all$cohort])
+scores_all$study <- unname(study_of[scores_all$cohort])
 scores_all$ID_clean <- clean_id(scores_all$ID)
 
-# coarse `study` grouping (used to join cytokines safely - see cytokine section)
+# `study` grouping
 study_of <- c(firefly_control = "firefly", firefly_NE = "firefly",
               starfish_preterm = "starfish", serenity_cp = "serenity",
               serenity_control = "serenity",champion_NE = "champion", 
@@ -531,9 +484,9 @@ scores_all$ID[scores_all$cohort == 'serenity_cp'] <- sub("^THU", "TUH", scores_a
 
 
 
-# ---- cohort comparisons ----------------------------------------------
-sub_df  <- scores_all[!is.na(scores_all$BR), ]   # subscale tests (excludes champion_CP)
-cshq_df <- scores_all                            # CSHQ-total test (all cohorts)
+# cohort comparisons 
+sub_df  <- scores_all[!is.na(scores_all$BR), ] # subscale tests (excludes champion_CP)
+cshq_df <- scores_all # CSHQ-total test (all cohorts)
 
 
 
@@ -544,12 +497,7 @@ levene_p <- sapply(subscale_names, function(s)
   leveneTest(sub_df[[s]] ~ factor(sub_df$cohort))[1, "Pr(>F)"])
 
 # 2. ANOVA residual normality was checked (Shapiro/QQ) and rejected, so
-#    Kruskal-Wallis is used throughout. Quick optional re-check:
-# for (s in c(subscale_names, "CSHQ_total")) {
-#   r <- residuals(aov(reformulate("cohort", s),
-#                      data = if (s == "CSHQ_total") cshq_df else sub_df))
-#   print(c(subscale = s, shapiro_p = signif(shapiro.test(r)$p.value, 3)))
-# }
+#    Kruskal-Wallis is used throughout. 
 
 # 3. Kruskal-Wallis
 kw_subscale <- sapply(subscale_names, function(s)
@@ -562,15 +510,15 @@ round(kw_subscale_fdr, 4)
 round(kw_cshq, 4)
 
 # 5. Dunn post-hoc for subscales significant after FDR
-#    (SOD, SD, NW, SDB in the original run - update to match kw_subscale_fdr)
+
 dunn_sig <- c("SOD", "SD", "NW", "SDB")
 dunn_res <- lapply(setNames(dunn_sig, dunn_sig), function(s)
   dunnTest(sub_df[[s]] ~ factor(sub_df$cohort), method = "bh")$res)
 dunn_res
 
 
-# ---- cohort mean subscale (per-item) heatmap -------------------------
-# mean subscale total per cohort / number of items summed -> per-item score
+#cohort mean subscale (per-item) heatmap 
+# mean subscale total per cohort / number of items summed
 n_items   <- sapply(subscale_items, function(cols) length(intersect(cols, items_no_nw1)))
 sub_means <- t(sapply(
   split(scores_all[!is.na(scores_all$BR), subscale_names],
@@ -595,7 +543,7 @@ pheatmap(sub_means, display_numbers = round(sub_means, 2),
 dev.off()
 
 
-# ---- plots: CSHQ total + significant subscales -----------------------
+#plots: CSHQ total & significant subscales
 cohort_levels <- c("firefly_control", "firefly_NE", "champion_NE",
                    "starfish_preterm", "serenity", "champion_CP",
                    "champion_control")
@@ -749,7 +697,6 @@ champion_control_cyto <- data.frame(
 
 
 serenity_cp_cyto_raw <- read.csv(file.path(data_dir, "serenity_CP_cytokines.csv"), stringsAsFactors = FALSE)
-#Query around ID labelling - not consistent with the other serenity data
 
 #We can relabel the age using the correspondence obtained from Johana
 serenity_cp_id_correspondence <- c(
@@ -806,10 +753,6 @@ serenity_control_cyto <- data.frame(
   stringsAsFactors = FALSE
 )
 
-# We have DIV/0! for a number of the EPO rows
-# We have DIV/0! for a number of the VEGF rows
-# We have DIV/0! for a number of the IL8 rows
-# We have DIV/0! for a number of the GMCSF_LPS rows
 
 serenity_control_cyto$EPO[is.na(serenity_control_cyto$EPO)] <- 2.430539
 serenity_control_cyto$VEGF[is.na(serenity_control_cyto$VEGF)] <- 4.984724
@@ -844,9 +787,6 @@ starfish_preterm_cyto$GMCSF_LPS[is.na(starfish_preterm_cyto$GMCSF_LPS)] <- 0.246
 starfish_control_cyto_raw <- read.csv(file.path(data_dir, "starfish_control_cytokines.csv"), stringsAsFactors = FALSE)
 #No sleep data currently available for the starfish control group 
 
-
-# GMCSF have a number of DIV0 entries - there are missing ones as well though so watch out for this
-# same for the LPS version of GMCSF
 
 starfish_control_cyto_raw$X.23[starfish_control_cyto_raw$X.23 == '#DIV/0!'] <- 0.24696
 starfish_control_cyto_raw$X.20[starfish_control_cyto_raw$X.20 == '#DIV/0!'] <- 0.24696
@@ -898,46 +838,7 @@ cyto_all <- cyto_all %>%
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#OLD CODE HERE:
-
-# # ---- join to CSHQ scores ---------------------------------------------
-# 
+# # join to CSHQ scores 
 scores_all$ID_clean <- clean_id(scores_all$ID)
 age_df$ID_clean     <- clean_id(age_df$ID)
 cyto_all$ID_clean   <- clean_id(cyto_all$ID)
@@ -984,10 +885,7 @@ data_cyto <- full_join(scores_all, cyto_all, by = c("ID_clean", 'cohort'))
 
 #For the moment, we focus only on the vehicle markers and we drop any of the rows with missing values in these markers
 marker_cols_standardised <- c('EPO_z', 'GMCSF_z', 'VEGF_z', 'IL8_z')
-#data_cyto_clean <- data_cyto[complete.cases(data_cyto[, c(marker_cols_standardised, 'cohort', 'CSHQ_total')]), ]
 
-
-#NEED TO CONSIDER DUPLICATES HERE
 
 
 # All rows involved in a duplicate ID_clean (first occurrence + repeats)
@@ -1204,6 +1102,7 @@ data_cyto_with_riskgroup <- data_cyto
 data_cyto_with_riskgroup$riskgroup[data_cyto_with_riskgroup$cohort == 'firefly_control'] <- 'CN' 
 data_cyto_with_riskgroup$riskgroup[data_cyto_with_riskgroup$cohort == 'champion_control'] <- 'CN'
 data_cyto_with_riskgroup$riskgroup[data_cyto_with_riskgroup$cohort == 'serenity_control'] <- 'CN'
+data_cyto_with_riskgroup$riskgroup[data_cyto_with_riskgroup$cohort == 'starfish_control'] <- 'CN'
 data_cyto_with_riskgroup$riskgroup[data_cyto_with_riskgroup$cohort == 'firefly_NE'] <- 'HR'
 data_cyto_with_riskgroup$riskgroup[data_cyto_with_riskgroup$cohort == 'starfish_preterm'] <- 'HR'
 data_cyto_with_riskgroup$riskgroup[data_cyto_with_riskgroup$cohort == 'champion_NE'] <- 'HR'
@@ -1221,6 +1120,14 @@ data_cyto_with_riskgroup$riskgroup <- as.factor(data_cyto_with_riskgroup$riskgro
 data_cyto_with_riskgroup$riskgroup_CP <- ifelse(data_cyto_with_riskgroup$riskgroup == 'CP', 1, 0)
 
 data_cyto_with_riskgroup$riskgroup_HR <- ifelse(data_cyto_with_riskgroup$riskgroup == 'HR' | data_cyto_with_riskgroup$riskgroup == 'CP', 1, 0)
+
+
+
+
+
+
+
+
 
 
 #EPO
@@ -1305,10 +1212,20 @@ data_cyto_with_riskgroup$GMCSF_diff_log2 <- log2(data_cyto_with_riskgroup$GMCSF_
 data_cyto_with_riskgroup$IL8_diff_log2 <- log2(data_cyto_with_riskgroup$IL8_LPS) - log2(data_cyto_with_riskgroup$IL8)
 data_cyto_with_riskgroup$VEGF_diff_log2 <- log2(data_cyto_with_riskgroup$VEGF_LPS) - log2(data_cyto_with_riskgroup$VEGF)
 
-data_cyto_with_riskgroup$EPO_diff_log2_z <- scale(data_cyto_with_riskgroup$EPO_diff_log2)
-data_cyto_with_riskgroup$GMCSF_diff_log2_z <- scale(data_cyto_with_riskgroup$GMCSF_diff_log2)
-data_cyto_with_riskgroup$IL8_diff_log2_z <- scale(data_cyto_with_riskgroup$IL8_diff_log2)
-data_cyto_with_riskgroup$VEGF_diff_log2_z <- scale(data_cyto_with_riskgroup$VEGF_diff_log2)
+data_cyto_with_riskgroup$EPO_diff_log2_z <- as.numeric(scale(data_cyto_with_riskgroup$EPO_diff_log2))
+data_cyto_with_riskgroup$GMCSF_diff_log2_z <- as.numeric(scale(data_cyto_with_riskgroup$GMCSF_diff_log2))
+data_cyto_with_riskgroup$IL8_diff_log2_z <- as.numeric(scale(data_cyto_with_riskgroup$IL8_diff_log2))
+data_cyto_with_riskgroup$VEGF_diff_log2_z <- as.numeric(scale(data_cyto_with_riskgroup$VEGF_diff_log2))
+
+
+
+data_cyto_with_riskgroup <- data_cyto_with_riskgroup %>% mutate(across(where(is.matrix), ~ as.numeric(as.vector(.x))))
+
+
+
+write.csv(data_cyto_with_riskgroup[,-c(1,16)], file = './eleanor_data_full.csv')
+
+
 
 #WITH AGE
 
@@ -1336,13 +1253,36 @@ lm_IL8_diff_log_3groups <- lm(VEGF_diff_log2_z ~  riskgroup_HR + riskgroup_CP, d
 # Visualisations: pairs plot with groups taken to be the (disjoint) high risk and CP groups along with controls
 
 # First looking at baseline (vehicle)
-ggpairs(data_cyto_with_riskgroup, columns = 48:51, aes(color = riskgroup))
+ggpairs(data_cyto_with_riskgroup, columns = 25:28, aes(color = riskgroup))
 
 # Now the LPS
+ggpairs(data_cyto_with_riskgroup, columns = 29:32, aes(colour = riskgroup))
+
 
 # Now the difference
 
+ggpairs(data_cyto_with_riskgroup, columns = 40:43, aes(colour = riskgroup))
+
 # Now the log-ratio 
+
+ggpairs(data_cyto_with_riskgroup, columns = 48:51, aes(colour = riskgroup))
+
+#There are a number of outliers in variables 1,3,4, so we zoom in slightly to get a better idea
+p <- ggpairs(data_cyto_with_riskgroup, columns = 48:51, aes(colour = riskgroup))
+lims <- list(c(-1, 1), NULL, c(-4, 2), c(-4, 2))
+
+n <- p$nrow
+for (i in seq_len(n)) {
+  for (j in seq_len(n)) {
+    if (j > i) next                            
+    xl <- lims[[j]]
+    yl <- if (i == j) NULL else lims[[i]]      
+    if (is.null(xl) && is.null(yl)) next
+    p[i, j] <- p[i, j] + coord_cartesian(xlim = xl, ylim = yl)
+  }
+}
+
+p
 
 
 

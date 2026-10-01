@@ -29,7 +29,7 @@ LCR_Gibbs <- function(X, Y, G,
     gamma <- gamma_init
     z <- z_init
   }
-  X_current <- X_current[,which(nu == 1), drop = FALSE]
+  X_current <- X_current[,which(gamma == 1), drop = FALSE]
 
   #want to create functions that initialise the sample arrays and select relevant functions
   z_update <- get_z_update_function(item.sel)

@@ -63,14 +63,67 @@ for (t in 1:n_replicates){
 
 # Creating storage arrays
 
+# beta coverage arrays
+sim1_beta_coverage_array_N500 <- array(0, dim = c(P+1, G-1, n_replicates))
+sim1_beta_coverage_array_N300 <- array(0, dim = c(P+1, G-1, n_replicates))
+sim1_beta_coverage_array_N150 <- array(0, dim = c(P+1, G-1, n_replicates))
+
+# theta coverage arrays
+sim1_theta_coverage_array_N500 <- array()
+sim1_theta_coverage_array_N300 <- array()
+sim1_theta_coverage_array_N150 <- array()
+  
+# beta bias arrays
+sim1_beta_bias_array_N500 <- array(0, dim = c(P+1, G-1, n_replicates))
+sim1_beta_bias_array_N300 <- array(0, dim = c(P+1, G-1, n_replicates))
+sim1_beta_bias_array_N150 <- array(0, dim = c(P+1, G-1, n_replicates))
+
+# theta bias arrays
+sim1_theta_bias_array_N500 <- array()
+sim1_theta_bias_array_N300 <- array()
+sim1_theta_bias_array_N150 <- array()
+  
+# beta MSE arrays
+sim1_beta_mse_array_N500 <- array(0, dim = c(P+1, G-1, n_replicates))
+sim1_beta_mse_array_N300 <- array(0, dim = c(P+1, G-1, n_replicates)) 
+sim1_beta_mse_array_N150 <- array(0, dim = c(P+1, G-1, n_replicates)) 
+
+# theta MSE arrays
+sim1_theta_mse_array_N500 <- array()  
+sim1_theta_mse_array_N300 <- array()
+sim1_theta_mse_array_N150 <- array()
+
+# item selection indicator arrays
+sim1_item_sel_ind_array_N500 <- array(0, dim = )
+sim1_item_sel_ind_array_N300 <- array(0, dim = )
+sim1_item_sel_ind_array_N150 <- array(0, dim = )
+
+# item selection probabiliity arrays
+sim1_item_sel_ind_array_N500 <- array(0, dim = )
+sim1_item_sel_ind_array_N300 <- array(0, dim = )
+sim1_item_sel_ind_array_N150 <- array(0, dim = )
+  
+# predictor selection indicator arrays
+sim1_pred_sel_array_N500 <- array(0, dim = )
+sim1_pred_sel_array_N300 <- array(0, dim = )
+sim1_pred_sel_array_N150 <- array(0, dim = )
+
+# predictor selection probability arrays
+sim1_pred_sel_array_N500 <- array(0, dim = )
+sim1_pred_sel_array_N300 <- array(0, dim = )
+sim1_pred_sel_array_N150 <- array(0, dim = )
+
+
 # Running the sampler
-# We want to double check convergernce metrics etc.
-for (t in 1:10){
+# We want to double check convergernce metrics etc. before running all of this...
+for (t in 1:n_replicates){
   print(paste('Replicate: ', t))
   fit <- LCR_Gibbs(X = sim_study1_dataset_list_N500[[t]]$X, Y = sim_study1_dataset_list_N500[[t]]$Y, 
                    G = 2, beta_prior_cov = diag(10^2,7), beta_prior_mean = rep(0,7), 
                    theta_hyperparam = 1, clust_var_prior = 0.5, item.sel = TRUE, cov.sel = TRUE, verbose = TRUE, 
                    relabel = TRUE, n_samples = 5000, burnin = 1000, thinby = 10)
+  
+  
 }
 
 

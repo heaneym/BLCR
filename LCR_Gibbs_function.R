@@ -5,7 +5,10 @@ LCR_Gibbs <- function(X, Y, G,
                       verbose = FALSE, relabel = TRUE,
                       n_samples = 1000, burnin = 500, 
                       thinby = 1,
-                      sfm = FALSE, sparse_prior = 1/G, sparse_sigma_MH = 0.1){
+                      sfm = FALSE, sparse_prior = 1/G, sparse_sigma_MH = 0.1,
+                      init_seed = FALSE, beta_init = NULL,
+                      z_init = NULL, theta_init = NULL,
+                      nu_init = NULL, gamma_init = NULL){
   args <- match.call()
   if (is.data.frame(X)) {
     X <- as.matrix(X)
@@ -19,6 +22,15 @@ LCR_Gibbs <- function(X, Y, G,
                    theta_hyperparam = theta_hyperparam,
                    clust_var_prior = clust_var_prior)
   list2env(init, envir = environment())
+  if (init_seed){
+    beta <- beta_init
+    theta <- theta_init
+    nu <- nu_init
+    gamma <- gamma_init
+    z <- z_init
+  }
+  X_current <- X_current[,which(nu == 1), drop = FALSE]
+
   #want to create functions that initialise the sample arrays and select relevant functions
   z_update <- get_z_update_function(item.sel)
   impute_missing_values <- get_imputation_function(item.sel)
@@ -133,7 +145,7 @@ LCR_Gibbs <- function(X, Y, G,
                       bar, percent, sample_count, n_samples, est_remaining)
       cat(sprintf("%-*s", 80, line))  
       flush.console()
-      print(sum(colSums(z) > 0))
+      #print(sum(colSums(z) > 0))
     }
   }
   if (verbose) {

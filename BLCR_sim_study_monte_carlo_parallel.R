@@ -1,7 +1,10 @@
 # This script runs both simulation 1 and 2 for 300 different replicates, N = 500, 300, 150 
 
 
+setwd(here())
 source('./sim_study_monte_carlo_functions.R')
+source('./LCR_sim_data.R')
+source('./LCR_Gibbs.R')
 
 library(e1071)      
 library(clue)        

@@ -1,6 +1,6 @@
 # This script runs both simulation 1 and 2 for 300 different replicates, N = 500, 300, 150 
 
-
+library(here)
 setwd(here())
 source('./sim_study_monte_carlo_functions.R')
 source('./LCR_sim_data.R')
@@ -89,7 +89,7 @@ dataset_lists <- list(
 #Simulation 1
 
 
-plan(multisession, workers = 8)
+plan(multisession, workers = 32)
 
 handlers(global = TRUE)
 handlers("progress")
@@ -196,7 +196,7 @@ plan(sequential)
 
 
 
-#Running the samw thing now for simulation 2
+#Running the same thing now for simulation 2
 
 
 
@@ -269,7 +269,7 @@ dataset_lists <- list(
 
 
 
-plan(multisession, workers = 8)
+plan(multisession, workers = 32)
 
 handlers(global = TRUE)
 handlers("progress")
@@ -402,8 +402,8 @@ sim3_X[,4] <- sample(c(0,1), n, replace = TRUE, prob = c(0.85,0.15))
 # Binary (0.06 proportion) representing ID diagnosis
 sim3_X[,5] <- sample(c(0,1), n, replace = TRUE, prob = c(0.94,0.06))
 
-M <- 50
-K <- rep(3, 50)
+M <- 40
+K <- rep(3, M)
 
 # covariate effects matrix
 sim3_beta <- matrix(c(
@@ -635,7 +635,7 @@ true_item_active <- c(rep(TRUE, 20), rep(FALSE, 20))
 true_pred_active <- rep(TRUE, 5)               
 
 #We'll try with 100 replicates for the moment and will see about scaling up later on
-n_replicates <- 100
+n_replicates <- 300
 
 #Simulating datasets
 
@@ -672,7 +672,7 @@ dataset_lists <- list(
 
 
 
-plan(multisession, workers = 8)
+plan(multisession, workers = 32)
 
 handlers(global = TRUE)
 handlers("progress")

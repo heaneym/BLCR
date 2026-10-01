@@ -1,0 +1,330 @@
+here() starts at /home/jovyan/projects/BLCR
+Loading required package: coda
+Loading required package: MASS
+##
+## Markov Chain Monte Carlo Package (MCMCpack)
+## Copyright (C) 2003-2026 Andrew D. Martin, Kevin M. Quinn, and Jong Hee Park
+##
+## Support provided by the U.S. National Science Foundation
+## (Grants SES-0350646 and SES-0350613)
+##
+Loading required package: future
+
+NOTE: Dependency discovery took 10 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 10 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 11 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 10 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 10 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 10 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 11 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 10 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 10 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 12 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 10 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 11 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 10 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 10 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 10 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 11 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 12 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 13 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 10 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 10 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 12 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 13 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 11 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 12 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 13 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 14 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 13 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 13 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 13 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 13 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 14 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 13 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 13 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 12 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 14 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 13 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 13 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 13 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 14 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 11 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 13 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 12 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 11 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 13 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 14 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 13 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 15 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 14 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 14 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 12 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 16 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 16 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 15 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 15 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 13 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 16 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 16 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 13 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 16 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 16 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 14 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+
+NOTE: Dependency discovery took 14 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+=== Sample size: N500 ===
+
+NOTE: Dependency discovery took 40 seconds during snapshot.
+Consider using .renvignore to ignore files, or switching to explicit snapshots.
+See `]8;;x-r-help:renv::dependencies?renv::dependencies]8;;` for more information.
+
+Warning: Caught FutureInterruptError. Canceling all iterations ...
+Error: Future (‘future_lapply-44’) of class MultisessionFuture interrupted (pid 408649) [future ‘future_lapply-44’ (93abc19e91924e8359ebb96a2ca0103f-44); on 93abc19e91924e8359ebb96a2ca0103f@3aa4b3b354b7<406738> at 2026-10-01 17:36:22.971573]
+Execution halted

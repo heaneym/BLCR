@@ -13,6 +13,35 @@ library(future.apply)
 library(progressr)
 library(MCMCpack)
 
+
+
+cpp_files <- normalizePath(c("./z_update_collapsed.cpp",
+                             "./z_update_uncollapsed.cpp"))
+cpp_cache <- file.path(getwd(), "rcpp_cache")
+dir.create(cpp_cache, showWarnings = FALSE)
+
+load_cpp <- function(files, cache) {
+  for (f in files) {
+    Rcpp::sourceCpp(f, cacheDir = cache, env = globalenv())
+  }
+  invisible(TRUE)
+}
+
+load_cpp(cpp_files, cpp_cache)
+
+
+ensure_cpp_loaded <- function(files, cache) {
+  if (!isTRUE(get0(".cpp_loaded", envir = globalenv(), inherits = FALSE))) {
+    load_cpp(files, cache)
+    assign(".cpp_loaded", TRUE, envir = globalenv())
+  }
+  invisible(TRUE)
+}
+
+
+
+
+
 #Same thing for simulation 3 
 
 G <- 4

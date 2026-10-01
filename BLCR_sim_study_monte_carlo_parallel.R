@@ -6,12 +6,36 @@ source('./sim_study_monte_carlo_functions.R')
 source('./LCR_sim_data.R')
 source('./LCR_Gibbs.R')
 
+library(parallelly)
 library(e1071)      
 library(clue)        
 library(HDInterval)  
 library(future.apply)
 library(progressr)
 library(MCMCpack)
+
+cpp_files <- normalizePath(c("./z_update_collapsed.cpp",
+                             "./z_update_uncollapsed.cpp"))
+cpp_cache <- file.path(getwd(), "rcpp_cache")
+dir.create(cpp_cache, showWarnings = FALSE)
+
+load_cpp <- function(files, cache) {
+  for (f in files) {
+    Rcpp::sourceCpp(f, cacheDir = cache, env = globalenv())
+  }
+  invisible(TRUE)
+}
+
+load_cpp(cpp_files, cpp_cache)
+
+
+ensure_cpp_loaded <- function(files, cache) {
+  if (!isTRUE(get0(".cpp_loaded", envir = globalenv(), inherits = FALSE))) {
+    load_cpp(files, cache)
+    assign(".cpp_loaded", TRUE, envir = globalenv())
+  }
+  invisible(TRUE)
+}
 
 #Simulation study 1
 
@@ -84,7 +108,7 @@ dataset_lists <- list(
 
 
 
-#Main loop - fiting model, extracting quantities we want, discard other less important stuff
+#Main loop - fitting model, extracting quantities we want, discard other less important stuff
 
 #Simulation 1
 
@@ -106,8 +130,9 @@ for (nm in names(sample_sizes)) {
       1:n_replicates,
       function(t) {
         
-        Rcpp::sourceCpp("./z_update_collapsed.cpp")
-        Rcpp::sourceCpp("./z_update_uncollapsed.cpp")
+        ensure_cpp_loaded(cpp_files, cpp_cache)
+        # Rcpp::sourceCpp("./z_update_collapsed.cpp")
+        # Rcpp::sourceCpp("./z_update_uncollapsed.cpp")
         
         dat <- dataset_lists[[nm]][[t]]
         
@@ -286,8 +311,9 @@ for (nm in names(sample_sizes)) {
       1:n_replicates,
       function(t) {
         
-        Rcpp::sourceCpp("./z_update_collapsed.cpp")
-        Rcpp::sourceCpp("./z_update_uncollapsed.cpp")
+        ensure_cpp_loaded(cpp_files, cpp_cache)
+        # Rcpp::sourceCpp("./z_update_collapsed.cpp")
+        # Rcpp::sourceCpp("./z_update_uncollapsed.cpp")
         
         dat <- dataset_lists[[nm]][[t]]
         
@@ -382,6 +408,12 @@ plan(sequential)
 
 
 #Same thing for simulation 3 
+
+
+
+
+
+
 
 G <- 4
 n <- 500
@@ -635,7 +667,7 @@ true_item_active <- c(rep(TRUE, 20), rep(FALSE, 20))
 true_pred_active <- rep(TRUE, 5)               
 
 #We'll try with 100 replicates for the moment and will see about scaling up later on
-n_replicates <- 300
+n_replicates <- 100
 
 #Simulating datasets
 
@@ -689,8 +721,9 @@ for (nm in names(sample_sizes)) {
       1:n_replicates,
       function(t) {
         
-        Rcpp::sourceCpp("./z_update_collapsed.cpp")
-        Rcpp::sourceCpp("./z_update_uncollapsed.cpp")
+        # Rcpp::sourceCpp("./z_update_collapsed.cpp")
+        # Rcpp::sourceCpp("./z_update_uncollapsed.cpp")
+        ensure_cpp_loaded(cpp_files, cpp_cache)
         
         dat <- dataset_lists[[nm]][[t]]
         

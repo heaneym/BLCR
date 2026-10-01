@@ -1,5 +1,5 @@
 library(ggplot2)
-library(ggmosaic)
+#library(ggmosaic)
 
 #This function creates a list of ggplots, each list item being a mosaic plot corresponding to an 
 #item extracted from LCA.

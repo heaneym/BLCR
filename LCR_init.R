@@ -1,4 +1,4 @@
-LCR_init <- function(X, Y, G, beta_prior_mean, beta_prior_cov, theta_hyperparam, clust_var_prior){
+LCR_init <- function(X, Y, G, beta_prior_mean, beta_prior_cov, theta_hyperparam, clust_var_prior, K_specify){
   if (is.vector(X)){
     ones <- rep(1,length(X))
     X1 <- cbind(ones,X)
@@ -9,7 +9,11 @@ LCR_init <- function(X, Y, G, beta_prior_mean, beta_prior_cov, theta_hyperparam,
   p <- ncol(X1) - 1
   M <- ncol(Y)
   n <- nrow(Y)
-  K <- apply(Y, 2, function(x) length(unique(x[!is.na(x)])))
+  if(is.null(K_specify)){
+    K <- apply(Y, 2, function(x) length(unique(x[!is.na(x)])))
+  } else {
+    K <- K_specify
+  }
   max_K <- max(K)
   theta <- array(0, dim = c(G, M, max(K)))  #Initialising theta
   for (g in 1:G) { #generating a sample from theta_{gj vectors for each g and j}

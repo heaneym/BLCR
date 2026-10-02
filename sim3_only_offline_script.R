@@ -47,34 +47,18 @@ ensure_cpp_loaded <- function(files, cache) {
 G <- 4
 n <- 500
 
-#We consider 5 predictors, one representing age (N(0,1)), and 4 representing clinical dianoses 
-# (binary, proportions 0.2, 0,15, 0.1, 0.5 - replicating ASD, other, ID diagnoses, gender respectively)
+
 p <- 5
-sim3_X <- matrix(NA, ncol = p, nrow = n)
-
-# Continuous, representing age
-sim3_X[,1] <- rnorm(n)
-# Binary (0.5 proportion) representing gender
-sim3_X[,2] <- sample(c(0,1), n, replace = TRUE, prob = c(0.5,0.5))
-# Binary (0.2 proportion) representing ASD
-sim3_X[,3] <- sample(c(0,1), n, replace = TRUE, prob = c(0.8,0.2))
-# Binary (0.15 proportion) representing other diagnoses
-sim3_X[,4] <- sample(c(0,1), n, replace = TRUE, prob = c(0.85,0.15))
-# Binary (0.06 proportion) representing ID diagnosis
-sim3_X[,5] <- sample(c(0,1), n, replace = TRUE, prob = c(0.94,0.06))
-
-M <- 40
-K <- rep(3, M)
 
 # covariate effects matrix
 sim3_beta <- matrix(c(
-  -0.8,  -0.6, -1.5, 
-  0.2,     0, 0.15, 
-  0,     0,    0, 
-  1,     0,  1.5, 
-  0,   0.1,  0.2, 
-  0,     0,  0.4 
-), nrow = p+1, byrow = TRUE)
+  -0.5, -0.3, -0.8,   # intercept
+  1.0, -0.8,  0.6,   # standard normal
+  1.2,  0.0, -1.0,   # binary 
+  -1.5,  1.2,  0.8,   # binary 
+  1.0, -1.2,  1.5,   # binary 
+  0.0,  0.0,  0.0    # binary - non-informative
+), nrow = p + 1, byrow = TRUE)
 
 #We let items 1-20 be informative with distinct parameters, and 21-40 non-informative
 
@@ -304,11 +288,41 @@ sim_study3_dataset_list_N500 <- vector("list", n_replicates)
 sim_study3_dataset_list_N300 <- vector("list", n_replicates)
 sim_study3_dataset_list_N150 <- vector("list", n_replicates)
 
+sim_study3_X_list_N500 <- vector("list", n_replicates)
+sim_study3_X_list_N300 <- vector("list", n_replicates)
+sim_study3_X_list_N150 <- vector("list", n_replicates)
+
+p <- 5
+sim3_X <- matrix(NA, ncol = p, nrow = n)
+
+
+
 set.seed(123)
 for (t in 1:n_replicates) {
-  sim_study3_dataset_list_N500[[t]] <- LCR_sim_data(theta = sim3_theta, beta = sim3_beta, n_samples = 500)
-  sim_study3_dataset_list_N300[[t]] <- LCR_sim_data(theta = sim3_theta, beta = sim3_beta, n_samples = 300)
-  sim_study3_dataset_list_N150[[t]] <- LCR_sim_data(theta = sim3_theta, beta = sim3_beta, n_samples = 150)
+  sim_study3_X_list_N500[[t]] <- matrix(NA, ncol = p, nrow = 500)
+  sim_study3_X_list_N500[[t]][,1] <- rnorm(500)
+  sim_study3_X_list_N500[[t]][,2] <- sample(c(0,1), 500, replace = TRUE, prob = c(0.5,0.5))
+  sim_study3_X_list_N500[[t]][,3] <- sample(c(0,1), 500, replace = TRUE, prob = c(0.8,0.2))
+  sim_study3_X_list_N500[[t]][,4] <- sample(c(0,1), 500, replace = TRUE, prob = c(0.85,0.15))
+  sim_study3_X_list_N500[[t]][,5] <- sample(c(0,1), 500, replace = TRUE, prob = c(0.94,0.06))
+  
+  sim_study3_X_list_N300[[t]] <- matrix(NA, ncol = p, nrow = 300)
+  sim_study3_X_list_N300[[t]][,1] <- rnorm(300)
+  sim_study3_X_list_N300[[t]][,2] <- sample(c(0,1), 300, replace = TRUE, prob = c(0.5,0.5))
+  sim_study3_X_list_N300[[t]][,3] <- sample(c(0,1), 300, replace = TRUE, prob = c(0.8,0.2))
+  sim_study3_X_list_N300[[t]][,4] <- sample(c(0,1), 300, replace = TRUE, prob = c(0.85,0.15))
+  sim_study3_X_list_N300[[t]][,5] <- sample(c(0,1), 300, replace = TRUE, prob = c(0.94,0.06))
+  
+  sim_study3_X_list_N150[[t]] <- matrix(NA, ncol = p, nrow = 150)
+  sim_study3_X_list_N150[[t]][,1] <- rnorm(150)
+  sim_study3_X_list_N150[[t]][,2] <- sample(c(0,1), 150, replace = TRUE, prob = c(0.5,0.5))
+  sim_study3_X_list_N150[[t]][,3] <- sample(c(0,1), 150, replace = TRUE, prob = c(0.8,0.2))
+  sim_study3_X_list_N150[[t]][,4] <- sample(c(0,1), 150, replace = TRUE, prob = c(0.85,0.15))
+  sim_study3_X_list_N150[[t]][,5] <- sample(c(0,1), 150, replace = TRUE, prob = c(0.94,0.06))
+  
+  sim_study3_dataset_list_N500[[t]] <- LCR_sim_data_given_X(theta = sim3_theta, beta = sim3_beta, n_samples = 500, X = sim_study3_X_list_N500[[t]])
+  sim_study3_dataset_list_N300[[t]] <- LCR_sim_data_given_X(theta = sim3_theta, beta = sim3_beta, n_samples = 300, X = sim_study3_X_list_N300[[t]])
+  sim_study3_dataset_list_N150[[t]] <- LCR_sim_data_given_X(theta = sim3_theta, beta = sim3_beta, n_samples = 150, X = sim_study3_X_list_N150[[t]])
 }
 
 
@@ -333,7 +347,7 @@ dataset_lists <- list(
 
 
 
-plan(multisession)
+plan(multisession, workers = 32)
 
 handlers(global = TRUE)
 handlers("txtprogressbar")
@@ -342,54 +356,57 @@ for (nm in names(sample_sizes)) {
   
   cat("=== Sample size:", nm, "===\n")
   
-  with_progress({
-    
-    pr <- progressor(n_replicates)
-    
-    results <- future_lapply(
-      1:n_replicates,
-      function(t) {
-        
-        Rcpp::sourceCpp("./z_update_collapsed.cpp")
-        Rcpp::sourceCpp("./z_update_uncollapsed.cpp")
-        
-        dat <- dataset_lists[[nm]][[t]]
-        
-        fit <- LCR_Gibbs(
-          X = dat$X,
-          Y = dat$Y,
-          G = G,
-          beta_prior_cov = diag(10^2, p + 1),
-          beta_prior_mean = rep(0, p + 1),
-          theta_hyperparam = 1,
-          clust_var_prior = 0.5,
-          item.sel = TRUE,
-          cov.sel = TRUE,
-          verbose = FALSE,
-          relabel = TRUE,
-          n_samples = 5000,
-          burnin = 1000,
-          thinby = 10
-        )
-        
-        summ <- extract_replicate_summary(
-          fit = fit,
-          true_z = dat$class,
-          true_beta = cbind(sim3_beta, 0),
-          true_theta = sim3_theta,
-          G = G,
-          K = K,
-          p = p,
-          M = M
-        )
-        
-        pr(sprintf("Replicate %d finished", t))
-        
-        summ
-      },
-      future.seed = TRUE
-    )
-  })
+  progress_file <- file.path(getwd(), paste0("sim3_progress_", nm, ".log"))
+  writeLines(character(0), progress_file)   # reset/create the file
+  start_time <- Sys.time()
+  
+  results <- future_lapply(
+    1:n_replicates,
+    function(t) {
+      
+      ensure_cpp_loaded(cpp_files, cpp_cache)
+      
+      dat <- dataset_lists[[nm]][[t]]
+      
+      fit <- LCR_Gibbs(
+        X = dat$X,
+        Y = dat$Y,
+        G = G,
+        beta_prior_cov = diag(10^2, p + 1),
+        beta_prior_mean = rep(0, p + 1),
+        theta_hyperparam = 1,
+        clust_var_prior = 0.5,
+        item.sel = TRUE,
+        cov.sel = TRUE,
+        verbose = FALSE,
+        relabel = TRUE,
+        n_samples = 5000,
+        burnin = 1000,
+        thinby = 10,
+        K_specify = K
+      )
+      
+      summ <- extract_replicate_summary(
+        fit = fit,
+        true_z = dat$class,
+        true_beta = cbind(sim3_beta, 0),
+        true_theta = sim3_theta,
+        G = G, K = K, p = p, M = M
+      )
+      
+      # one line per finished replicate; append = TRUE is safe enough for this use
+      cat(sprintf("%s | %s | replicate %d finished\n",
+                  format(Sys.time(), "%Y-%m-%d %H:%M:%S"), nm, t),
+          file = progress_file, append = TRUE)
+      
+      summ
+    },
+    future.seed = TRUE,
+    future.scheduling = Inf     # one task per replicate, so workers pick up jobs dynamically
+  )
+  
+  cat(sprintf("%s | %s done in %.1f min\n", format(Sys.time()), nm,
+              as.numeric(difftime(Sys.time(), start_time, units = "mins"))))
 
   for (t in 1:n_replicates) {
     summ <- results[[t]]

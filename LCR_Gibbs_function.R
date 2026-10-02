@@ -8,7 +8,8 @@ LCR_Gibbs <- function(X, Y, G,
                       sfm = FALSE, sparse_prior = 1/G, sparse_sigma_MH = 0.1,
                       init_seed = FALSE, beta_init = NULL,
                       z_init = NULL, theta_init = NULL,
-                      nu_init = NULL, gamma_init = NULL){
+                      nu_init = NULL, gamma_init = NULL,
+                      K_specify = NULL){
   args <- match.call()
   if (is.data.frame(X)) {
     X <- as.matrix(X)
@@ -20,7 +21,8 @@ LCR_Gibbs <- function(X, Y, G,
                    beta_prior_mean = beta_prior_mean,
                    beta_prior_cov = beta_prior_cov,
                    theta_hyperparam = theta_hyperparam,
-                   clust_var_prior = clust_var_prior)
+                   clust_var_prior = clust_var_prior,
+                   K_specify = K_specify)
   list2env(init, envir = environment())
   if (init_seed){
     beta <- beta_init

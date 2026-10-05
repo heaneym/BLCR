@@ -46,7 +46,8 @@ ensure_cpp_loaded <- function(files, cache) {
 
 G <- 4
 n <- 500
-
+M <- 40
+K <- rep(3,M)
 
 p <- 5
 

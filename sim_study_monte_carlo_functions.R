@@ -75,7 +75,9 @@ relabel_theta_mat <- function(theta_mat, perm) {
 
 # function to apply a class permutation to beta
 relabel_beta_mat <- function(beta_mat_G, perm) {
-  beta_mat_G[, perm, drop = FALSE]
+  out <- beta_mat_G
+  out[, perm] <- beta_mat_G
+  out
 }
 
 

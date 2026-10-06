@@ -20,95 +20,148 @@ sim3_results_N300 <- readRDS('./sim3_results_N300.rds')
 sim3_results_N500 <- readRDS('./sim3_results_N500.rds')
 
 
-make_theta_metric_table <- function(fit, true_theta, metric,
-                                    metric_label, digits_metric = 3,
-                                    caption, label,
-                                    file = "", digits_true = 2,
-                                    longtable = FALSE) {
-  n_items   <- length(true_theta)
-  n_classes <- nrow(true_theta[[1]])
+
+sim1_theta_N150 <- theta_summarise(sim1_results_N150, true_theta = sim1_theta)
+sim1_theta_N300 <- theta_summarise(sim1_results_N300, true_theta = sim1_theta)
+sim1_theta_N500 <- theta_summarise(sim1_results_N500, true_theta = sim1_theta)
+
+sim2_theta_N150 <- theta_summarise(sim2_results_N150, true_theta = sim2_theta)
+sim2_theta_N300 <- theta_summarise(sim2_results_N300, true_theta = sim2_theta)
+sim2_theta_N500 <- theta_summarise(sim2_results_N500, true_theta = sim2_theta)
+
+sim3_theta_N150 <- theta_summarise(sim3_results_N150, true_theta = sim3_theta)
+sim3_theta_N300 <- theta_summarise(sim3_results_N300, true_theta = sim3_theta)
+sim3_theta_N500 <- theta_summarise(sim3_results_N500, true_theta = sim3_theta)
+
+# 
+# 
+# 
+# #Creating a summary table for simulation 1 first
+# sim1_theta_bias_g1_N150 <- lapply(sim1_theta_N150$mean_bias, function(x) x[1,])
+# sim1_theta_bias_g2_N150 <- lapply(sim1_theta_N150$mean_bias, function(x) x[2,])
+# 
+# sim1_theta_bias_g1_N300 <- lapply(sim1_theta_N300$mean_bias, function(x) x[1,])
+# sim1_theta_bias_g2_N300 <- lapply(sim1_theta_N300$mean_bias, function(x) x[2,])
+# 
+# sim1_theta_bias_g1_N500 <- lapply(sim1_theta_N500$mean_bias, function(x) x[1,])
+# sim1_theta_bias_g2_N500 <- lapply(sim1_theta_N500$mean_bias, function(x) x[2,])
+# 
+# sim1_theta_mse_g1_N150 <- lapply(sim1_theta_N150$mean_mse, function(x) x[1,])
+# sim1_theta_mse_g2_N150 <- lapply(sim1_theta_N150$mean_mse, function(x) x[2,])
+# 
+# sim1_theta_mse_g1_N300 <- lapply(sim1_theta_N300$mean_mse, function(x) x[1,])
+# sim1_theta_mse_g2_N300 <- lapply(sim1_theta_N300$mean_mse, function(x) x[2,])
+# 
+# sim1_theta_mse_g1_N500 <- lapply(sim1_theta_N500$mean_mse, function(x) x[1,])
+# sim1_theta_mse_g2_N500 <- lapply(sim1_theta_N500$mean_mse, function(x) x[2,])
+# 
+# 
+# sim1_theta_coverage_g1_N150 <- lapply(sim1_theta_N150$mean_coverage, function(x) x[1,])
+# sim1_theta_coverage_g2_N150 <- lapply(sim1_theta_N150$mean_coverage, function(x) x[2,])
+# 
+# sim1_theta_coverage_g1_N300 <- lapply(sim1_theta_N300$mean_coverage, function(x) x[1,])
+# sim1_theta_coverage_g2_N300 <- lapply(sim1_theta_N300$mean_coverage, function(x) x[2,])
+# 
+# sim1_theta_coverage_g1_N500 <- lapply(sim1_theta_N500$mean_coverage, function(x) x[1,])
+# sim1_theta_coverage_g2_N500 <- lapply(sim1_theta_N500$mean_coverage, function(x) x[2,])
+# 
+# 
+# 
+# sim1_theta_mean_bias_g1 <- c(mean(unlist(sim1_theta_bias_g1_N150)), mean(unlist(sim1_theta_bias_g1_N300)), mean(unlist(sim1_theta_bias_g1_N500)))
+# sim1_theta_mean_bias_g2 <- c(mean(unlist(sim1_theta_bias_g2_N150)), mean(unlist(sim1_theta_bias_g2_N300)), mean(unlist(sim1_theta_bias_g2_N500)))
+# 
+# 
+# sim1_theta_mean_abs_bias_g1 <- c(mean(abs(unlist(sim1_theta_bias_g1_N150))), mean(abs(unlist(sim1_theta_bias_g1_N300))), mean(abs(unlist(sim1_theta_bias_g1_N500))))
+# sim1_theta_mean_abs_bias_g2 <- c(mean(abs(unlist(sim1_theta_bias_g2_N150))), mean(abs(unlist(sim1_theta_bias_g2_N300))), mean(abs(unlist(sim1_theta_bias_g2_N500))))
+# 
+# sim1_theta_max_abs_bias_g1 <- c(max(abs(unlist(sim1_theta_bias_g1_N150))), max(abs(unlist(sim1_theta_bias_g1_N300))), max(abs(unlist(sim1_theta_bias_g1_N500))))
+# sim1_theta_max_abs_bias_g2 <- c(max(abs(unlist(sim1_theta_bias_g2_N150))), max(abs(unlist(sim1_theta_bias_g2_N300))), max(abs(unlist(sim1_theta_bias_g2_N500))))
+# 
+# sim1_theta_mean_mse_g1 <- c(mean(unlist(sim1_theta_mse_g1_N150)), mean(unlist(sim1_theta_mse_g1_N300)), mean(unlist(sim1_theta_mse_g1_N500)))
+# sim1_theta_mean_mse_g2 <- c(mean(unlist(sim1_theta_mse_g2_N150)), mean(unlist(sim1_theta_mse_g2_N300)), mean(unlist(sim1_theta_mse_g2_N500)))
+# 
+# sim1_theta_mean_coverage_g1 <- c(mean(unlist(sim1_theta_coverage_g1_N150)), mean(unlist(sim1_theta_coverage_g1_N300)), mean(unlist(sim1_theta_coverage_g1_N500)))
+# sim1_theta_mean_coverage_g2 <- c(mean(unlist(sim1_theta_coverage_g2_N150)), mean(unlist(sim1_theta_coverage_g2_N300)), mean(unlist(sim1_theta_coverage_g2_N500)))
+# 
+# sim1_theta_min_coverage_g1 <- c(min(unlist(sim1_theta_coverage_g1_N150)), min(unlist(sim1_theta_coverage_g1_N300)), min(unlist(sim1_theta_coverage_g1_N500)))
+# sim1_theta_min_coverage_g2 <- c(min(unlist(sim1_theta_coverage_g2_N150)), min(unlist(sim1_theta_coverage_g2_N300)), min(unlist(sim1_theta_coverage_g2_N500)))
+# 
+# sim1_theta_max_coverage_g1 <- c(max(unlist(sim1_theta_coverage_g1_N150)), max(unlist(sim1_theta_coverage_g1_N300)), max(unlist(sim1_theta_coverage_g1_N500)))
+# sim1_theta_max_coverage_g2 <- c(max(unlist(sim1_theta_coverage_g2_N150)), max(unlist(sim1_theta_coverage_g2_N300)), max(unlist(sim1_theta_coverage_g2_N500)))
+# 
+
+
+library(xtable)
+
+make_sim_table <- function(theta_list, G, Ns = c(150, 300, 500)) {
   
-  rows <- list()
-  for (j in seq_len(n_items)) {
-    m_true <- true_theta[[j]]
-    m_est  <- fit[[metric]][[j]]
-    ncat   <- sum(colSums(!is.na(m_true)) > 0)   # drop padded NA categories
-    for (cc in seq_len(ncat)) {
-      r <- list(Var = if (cc == 1) as.character(j) else "",
-                Cat = as.character(cc))
-      for (k in seq_len(n_classes)) {
-        r[[paste0("True", k)]]   <- m_true[k, cc]
-        r[[paste0("Metric", k)]] <- m_est[k, cc]
-      }
-      rows[[length(rows) + 1]] <- as.data.frame(r, stringsAsFactors = FALSE)
-    }
-  }
-  tab <- do.call(rbind, rows)
+  # One block of rows (one row per N) for each group
+  blocks <- lapply(seq_len(G), function(g) {
+    t(sapply(seq_along(theta_list), function(i) {
+      res  <- theta_list[[i]]
+      bias <- unlist(lapply(res$mean_bias,     function(x) x[g, ]))
+      mse  <- unlist(lapply(res$mean_mse,      function(x) x[g, ]))
+      cov  <- unlist(lapply(res$mean_coverage, function(x) x[g, ]))
+      
+      c(N             = Ns[i],
+        mean_bias     = mean(bias),
+        mean_abs_bias = mean(abs(bias)),
+        max_abs_bias  = max(abs(bias)),
+        mean_mse      = mean(mse),
+        mean_coverage = mean(cov),
+        min_coverage  = min(cov),
+        max_coverage  = max(cov))
+    }))
+  })
+  
+  tab <- as.data.frame(do.call(rbind, blocks))
+  n_N <- length(Ns)
+  
+  
+  g_col <- unlist(lapply(seq_len(G), function(g) {
+    c(paste0("$g = ", g, "$"), rep("", n_N - 1))
+  }))
+  
+  tab <- data.frame(g = g_col, tab, check.names = FALSE, stringsAsFactors = FALSE)
   
   colnames(tab) <- c(
-    "\\textbf{Var.}", "\\textbf{Cat.}",
-    unlist(lapply(seq_len(n_classes), function(k)
-      c(sprintf("\\textbf{True %d}", k),
-        sprintf("\\textbf{%s %d}", metric_label, k))))
+    "",
+    "$N$",
+    "\\shortstack{Mean\\\\Bias}",
+    "\\shortstack{Mean\\\\$|\\mathrm{Bias}|$}",
+    "\\shortstack{Max\\\\$|\\mathrm{Bias}|$}",
+    "\\shortstack{Mean\\\\MSE}",
+    "\\shortstack{Mean\\\\Coverage}",
+    "\\shortstack{Min\\\\Coverage}",
+    "\\shortstack{Max\\\\Coverage}"
   )
   
-  dig <- c(0, 0, 0, rep(c(digits_true, digits_metric), n_classes))
+  tab_xt <- xtable(
+    tab,
+    digits = c(0, 0, 0, rep(3, 7)),
+    align  = c("l", "l", rep("c", 8))
+  )
   
-  xt <- xtable(tab,
-               digits  = dig,
-               align   = c("l", "l", "l", rep("c", 2 * n_classes)),
-               caption = caption,
-               label   = label)
+  # A midrule after every group except the last
+  mid_pos <- as.list(n_N * seq_len(G - 1))
   
-  print(xt,
-        file = file,
-        include.rownames = FALSE,
-        booktabs = TRUE,
-        floating = !longtable,
-        tabular.environment = if (longtable) "longtable" else "tabular",
-        table.placement = if (longtable) NULL else "H",
-        caption.placement = "bottom",
-        sanitize.text.function = identity,
-        sanitize.colnames.function = identity,
-        math.style.negative = TRUE,
-        na.print = "")
+  print(
+    tab_xt,
+    include.rownames = FALSE,
+    sanitize.colnames.function = identity,
+    sanitize.text.function = identity,
+    booktabs = TRUE,
+    size = "\\small",
+    add.to.row = list(pos = mid_pos, command = rep("\\midrule\n", G - 1)),
+    hline.after = c(-1, 0, nrow(tab))
+  )
 }
 
+# Simulation 1 (2 groups)
+make_sim_table(list(sim1_theta_N150, sim1_theta_N300, sim1_theta_N500), G = 2)
 
-sim_specs <- list(
-  sim1 = list(fits = list("150" = sim1_theta_N150,
-                          "300" = sim1_theta_N300,
-                          "500" = sim1_theta_N500),
-              true = sim1_theta, longtable = FALSE, num = 1),
-  sim2 = list(fits = list("150" = sim2_theta_N150,
-                          "300" = sim2_theta_N300,
-                          "500" = sim2_theta_N500),
-              true = sim2_theta, longtable = FALSE, num = 2),
-  sim3 = list(fits = list("150" = sim3_theta_N150,
-                          "300" = sim3_theta_N300,
-                          "500" = sim3_theta_N500),
-              true = sim3_theta, longtable = TRUE, num = 3)
-)
+# Simulation 2 (3 groups)
+make_sim_table(list(sim2_theta_N150, sim2_theta_N300, sim2_theta_N500), G = 3)
 
-dir.create("./sim_study_tables", showWarnings = FALSE)
-
-for (s in names(sim_specs)) {
-  sp <- sim_specs[[s]]
-  for (n in names(sp$fits)) {
-    for (m in names(metrics)) {
-      spec <- metrics[[m]]
-      make_theta_metric_table(
-        fit           = sp$fits[[n]],
-        true_theta    = sp$true,
-        metric        = spec$slot,
-        metric_label  = spec$label,
-        digits_metric = spec$digits,
-        longtable     = sp$longtable,
-        caption = sprintf("True item probability parameters and %s of their estimates for simulation %d ($N = %s$).",
-                          spec$long, sp$num, n),
-        label   = sprintf("table:%s_item_prob_%s_N%s", s, m, n),
-        file    = sprintf("./sim_study_tables/%s_item_prob_%s_N%s.tex", s, m, n)
-      )
-    }
-  }
-}
+# Simulation 3 (4 groups)
+make_sim_table(list(sim3_theta_N150, sim3_theta_N300, sim3_theta_N500), G = 4)

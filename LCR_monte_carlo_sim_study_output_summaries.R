@@ -768,7 +768,7 @@ sim3_results_N500 <- readRDS('./sim3_results_N500.rds')
 
 
 
-#Simulation 1
+#Simulation 3
 
 sim3_beta_N150 <- beta_summarise(sim3_results_N150)
 sim3_beta_N300 <- beta_summarise(sim3_results_N300)

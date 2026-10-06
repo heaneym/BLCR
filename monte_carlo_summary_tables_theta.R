@@ -1,6 +1,8 @@
 source('./sim_study_monte_carlo_functions.R')
 source('./sim_study_monte_carlo_summary_analysis.R')
 
+source('./sim_study_parameters.R')
+
 library(xtable)
 
 n_replicates <- 300

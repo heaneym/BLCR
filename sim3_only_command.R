@@ -14,4 +14,4 @@ tail(readLines("./sim3_progress_N300.log"), 5)
 tail(readLines("./sim3_progress_N150.log"), 5)
 
 #substitute the PID for the number 480954 here - prints the usage of memory, CPU etc.
-system("ps -p 22744 -o pid,etime,%cpu,%mem,cmd")
+system("ps -p 11058 -o pid,etime,%cpu,%mem,cmd")

@@ -167,3 +167,67 @@ make_sim_table(list(sim2_theta_N150, sim2_theta_N300, sim2_theta_N500), G = 3)
 
 # Simulation 3 (4 groups)
 make_sim_table(list(sim3_theta_N150, sim3_theta_N300, sim3_theta_N500), G = 4)
+
+
+
+#Creating plots for the item parameters
+
+plot_item_sim <- function(sim,
+                          Ns              = c(150, 300, 500),
+                          n_active        = c(4, 8, 20),
+                          drop_last_level = FALSE) {
+  
+  objs <- lapply(Ns, function(N) get(sprintf("sim%d_theta_N%d", sim, N)))
+  J    <- length(objs[[1]]$mean_coverage)
+  
+  cols     <- c("white", "grey60", "black")[seq_along(Ns)]
+  N_offset <- seq(-0.28, 0.28, length.out = length(Ns))
+  
+
+  cells <- function(k, field, j, transform) {
+    m <- as.matrix(transform(objs[[k]][[field]][[j]]))
+    if (drop_last_level && ncol(m) > 1) m <- m[, -ncol(m), drop = FALSE]
+    as.vector(m)
+  }
+  
+  panel <- function(field, transform, ylab, ref, ylim) {
+    plot(NA, xlim = c(0.5, J + 0.5), ylim = ylim, xaxt = "n",
+         xlab = "Item", ylab = ylab,
+         main = paste0("Simulation ", sim, ": ", ylab, " by item"))
+    axis(1, at = 1:J, cex.axis = if (J > 20) 0.6 else 0.9)
+    abline(h = ref, col = "red", lty = 2)
+    abline(v = n_active[sim] + 0.5, lty = 3)      # active | inactive
+    
+    for (k in seq_along(Ns)) for (j in 1:J) {
+      v <- cells(k, field, j, transform)
+      points(j + N_offset[k] + runif(length(v), -0.04, 0.04), v,
+             pch = 21, bg = cols[k], col = "black", cex = 0.6)
+    }
+    legend("bottomright", legend = paste("N =", Ns), pch = 21,
+           pt.bg = cols, bty = "n", cex = 0.8, horiz = TRUE)
+  }
+  
+  cov_all  <- unlist(lapply(objs, function(o) unlist(o$mean_coverage)))
+  bias_all <- unlist(lapply(objs, function(o) abs(unlist(o$mean_bias))))
+  
+  op <- par(mfrow = c(2, 1), mar = c(4, 4, 2.5, 1))
+  on.exit(par(op))
+  panel("mean_coverage", identity, "Coverage", 0.95, c(min(cov_all, 0.9), 1))
+  panel("mean_bias",     abs,      "|Bias|",   0,    c(0, max(bias_all)))
+}
+
+
+for (s in 1:3) plot_item_sim(s)
+
+
+pdf("./sim_study_plots/sim_study1_plots/sim1_item_probs.pdf", width = 14, height = 7)
+plot_item_sim(1)
+dev.off()
+pdf("./sim_study_plots/sim_study2_plots/sim2_item_probs.pdf", width = 14, height = 7)
+plot_item_sim(2)
+dev.off()
+pdf("./sim_study_plots/sim_study3_plots/sim3_item_probs.pdf", width = 14, height = 7)
+plot_item_sim(3)
+dev.off()
+
+

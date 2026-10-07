@@ -454,7 +454,7 @@ par(mfrow = c(1, 1))
 #           sim1_beta_N300$unconditional$mean_coverage[5,],
 #           sim1_beta_N500$unconditional$mean_coverage[5,],
 #           sim1_beta[5,])
-)
+#)
 
 
 
@@ -918,7 +918,7 @@ metric <- "bias"
 
 
 # shared y-axis range across both g
-y_lim <- range(unlist(lapply(1:2, function(g)
+y_lim <- range(unlist(lapply(1:3, function(g)
   lapply(1:5, function(k)
     lapply(fits, get_reps_sim3, metric = metric, k = k, g = g)))), na.rm = TRUE)
 
@@ -960,7 +960,11 @@ par(mfrow = c(1, 1))
 metric <- "bias"
 
 
-y_lim <- c(-10, 13)   
+y_lim <- range(unlist(lapply(1:3, function(g)
+  lapply(1:5, function(k)
+    lapply(fits, function(f)
+      boxplot.stats(get_reps_sim3(f, metric, k, g))$stats)))), na.rm = TRUE)
+y_lim <- y_lim + c(-1, 1) * 0.05 * diff(y_lim)  
 
 pdf("./sim_study_plots/sim_study3_plots/sim3_beta_bias_plot_no_outliers.pdf", width = 7, height = 4.4)
 par(mfrow = c(3, 5),
@@ -1006,9 +1010,11 @@ mse_mat <- cbind(
   sim3_beta_N500$conditional$mean_mse[1:5, ]
 )
 
-y_lim <- range(mse_mat, na.rm = TRUE)
+# Log scale needs positive values
+y_lim <- range(mse_mat[mse_mat > 0], na.rm = TRUE)
 
-pdf("./sim_study_plots/sim_study3_plots/sim3_beta_mse_plot.pdf", width = 7, height = 4.8)
+pdf("./sim_study_plots/sim_study3_plots/sim3_beta_mse_plot.pdf",
+    width = 7, height = 4.8)
 par(mfrow = c(3, 5),
     oma = c(2, 3, 2, 0),
     mar = c(2, 0.6, 2, 0.6),
@@ -1016,20 +1022,19 @@ par(mfrow = c(3, 5),
     cex.axis = 0.8,
     cex.main = 0.9)
 
-
 for (g in 1:3) {
-  cols <- seq(g, by = 2, length.out = 3)   
+  cols <- seq(g, by = 3, length.out = 3)   # was by = 2
   for (k in 1:5) {
     plot(1:3, mse_mat[k, cols],
-         #log = "y",
+         log = "y",
          ylim = y_lim,
          xlim = c(0.5, 3.5),
          xaxt = "n", yaxt = "n",
          type = "b", pch = 16,
          xlab = "", ylab = "",
-         main = bquote(beta[.(k-1) * .(g)]))
+         main = bquote(beta[.(k - 1) * .(g)]))
     axis(1, at = 1:3, labels = sample_sizes)
-    if (k == 1) axis(2)
+    if (k == 1) axis(2, las = 1)
   }
 }
 
